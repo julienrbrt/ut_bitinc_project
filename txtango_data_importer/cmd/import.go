@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"tx2db/bolk"
+	"tx2db/txtango"
 
 	"github.com/spf13/cobra"
 )
@@ -22,4 +23,15 @@ var importCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(importCmd)
+}
+
+func migrate() {
+	// make get vehicle request
+	vehicleRequest := txtango.GetVehicleRequest{
+		IncludePosition: true,
+		IncludeActivity: true,
+		IncludeDrivers:  true,
+	}
+
+	txtango.GetVehicle(&vehicleRequest)
 }

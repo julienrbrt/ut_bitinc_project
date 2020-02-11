@@ -9,7 +9,7 @@ import (
 var loginTemplate = `
 {{ define "login" }}
 <Login>
-    <DateTime>{{.DateTime}}</DateTime>
+    <DateTime>{{.Date}}</DateTime>
     <Version>{{.Version}}</Version>
     <Dispatcher>{{.Dispatcher}}</Dispatcher>
     <Password>{{.Password}}</Password>
@@ -26,7 +26,7 @@ var loginTemplate = `
 //Login to login in tx-tango
 //login happens in each request
 type Login struct {
-	Date       time.Time
+	Date       string
 	Version    int
 	Dispatcher string
 	Password   string
@@ -35,10 +35,9 @@ type Login struct {
 	Language   string
 }
 
-//Authenticate build authentication bloc
-func Authenticate() (*Login, error) {
-	var login Login
-
+//authenticate helper build authentication bloc using .env
+func authenticate() *Login {
+	login := Login{}
 	//fill in login credentials
 	login.Dispatcher = os.Getenv("TX_USERNAME")
 	login.Password = os.Getenv("TX_PASSWORD")
@@ -46,5 +45,8 @@ func Authenticate() (*Login, error) {
 	login.SystemNr = os.Getenv("TX_SYSTEM_NR")
 	login.Language = "EN"
 
-	return &login, nil
+	// build time string
+	login.Date = time.Time{}.Format(time.RFC3339)
+
+	return &login
 }
