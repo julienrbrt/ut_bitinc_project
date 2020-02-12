@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-//TXError parse errors message in response
+//TXError parses errors message in response
 type TXError struct {
 	Text  string `xml:",chardata"`
 	Error struct {
@@ -22,7 +22,7 @@ type TXError struct {
 	} `xml:"Error"`
 }
 
-//TXWarning parse warning message in response
+//TXWarning parses warning message in response
 type TXWarning struct {
 	Text    string `xml:",chardata"`
 	Warning struct {
@@ -34,14 +34,14 @@ type TXWarning struct {
 }
 
 //soapCall generate a request given a request and a template and sends it
-func soapCall(req interface{}, tmplName, tmplRaw string) ([]byte, error) {
+func soapCall(params interface{}, tmplName, tmplRaw string) ([]byte, error) {
 	//construct the request using a template
 	tmpl := template.Must(template.New(tmplName).Parse(tmplRaw))
 	tmpl = template.Must(tmpl.Parse(loginTemplate))
 
 	doc := &bytes.Buffer{}
 	//fill in template values with actual values
-	err := tmpl.Execute(doc, req)
+	err := tmpl.Execute(doc, params)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error while filling template")
 	}

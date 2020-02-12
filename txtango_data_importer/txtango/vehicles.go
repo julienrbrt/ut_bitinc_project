@@ -2,70 +2,57 @@ package txtango
 
 import (
 	"encoding/xml"
-	"fmt"
 )
 
+// http://integratorsprod.transics.com/Administration/Get_Vehicles.html
+
+//getVehiculeTemplate implements Get_Vehicles_V13
 var getVehiculeTemplate = `
 <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
 		<Get_Vehicles_V13 xmlns="http://transics.org">
 			{{ template "login" .Login}}
             <VehicleSelection>
-                <Identifiers />
-				<IncludePosition>{{.IncludePosition}}</IncludePosition>
-				<IncludeActivity>{{.IncludeActivity}}</IncludeActivity>
-				<IncludeDrivers>{{.IncludeDrivers}}</IncludeDrivers>
-				<IncludeObcInfo>{{.IncludeObcInfo}}</IncludeObcInfo>
-				<IncludeETAInfo>{{.IncludeETAInfo}}</IncludeETAInfo>
-				<IncludeTemperatureInfo>{{.IncludeTemperatureInfo}}</IncludeTemperatureInfo>
-				<IncludeInfoFields>{{.IncludeInfoFields}}</IncludeInfoFields>
-				<IncludeUpdateDates>{{.IncludeUpdateDates}}</IncludeUpdateDates>
-				<IncludeInactive>{{.IncludeInactive}}</IncludeInactive>
-				<IncludeCompanyCardInfo>{{.IncludeCompanyCardInfo}}</IncludeCompanyCardInfo>
-				<IncludeVehicleProfile>{{.IncludeVehicleProfile}}</IncludeVehicleProfile>
-				<IncludeNextStopInfo>{{.IncludeNextStopInfo}}</IncludeNextStopInfo>
-				<DiagnosticFilter />
-				<IncludeExtraTruckInfo>{{.IncludeExtraTruckInfo}}</IncludeExtraTruckInfo>
-				<IncludeGroups>{{.IncludeGroups}}</IncludeGroups>
-                <GenericFilter>
-                    <GenericFilterItem />
-                </GenericFilter>
+				<IncludePosition>false</IncludePosition>
+				<IncludeActivity>false</IncludeActivity>
+				<IncludeDrivers>true</IncludeDrivers>
+				<IncludeObcInfo>false</IncludeObcInfo>
+				<IncludeETAInfo>true</IncludeETAInfo>
+				<IncludeTemperatureInfo>true</IncludeTemperatureInfo>
+				<IncludeInfoFields>false</IncludeInfoFields>
+				<IncludeUpdateDates>true</IncludeUpdateDates>
+				<IncludeInactive>true</IncludeInactive>
+				<IncludeCompanyCardInfo>true</IncludeCompanyCardInfo>
+				<IncludeVehicleProfile>false</IncludeVehicleProfile>
+				<IncludeNextStopInfo>true</IncludeNextStopInfo>
+				<IncludeExtraTruckInfo>true</IncludeExtraTruckInfo>
+				<IncludeGroups>true</IncludeGroups>
             </VehicleSelection>
         </Get_Vehicles_V13>
     </soap:Body>
 </soap:Envelope>
 `
 
-//GetVehicleRequest implements GetVehicle_13
+//GetVehicleRequest implements Get_Vehicles_V13
 type GetVehicleRequest struct {
 	// every request must implement the login
-	Login                  Login
-	IncludePosition        bool
-	IncludeActivity        bool
-	IncludeDrivers         bool
-	IncludeObcInfo         bool
-	IncludeETAInfo         bool
-	IncludeTemperatureInfo bool
-	IncludeInfoFields      bool
-	IncludeUpdateDates     bool
-	IncludeInactive        bool
-	IncludeCompanyCardInfo bool
-	IncludeVehicleProfile  bool
-	IncludeNextStopInfo    bool
-	IncludeExtraTruckInfo  bool
-	IncludeGroups          bool
+	Login Login
 }
 
-//GetVehicleResponse parse the response from TX-TANGO -- written using https://www.onlinetool.io/xmltogo/
+//GetVehicleResponse parses the response from TX-TANGO -- written using https://www.onlinetool.io/xmltogo/
 type GetVehicleResponse struct {
 	XMLName xml.Name `xml:"Envelope"`
+	Text    string   `xml:",chardata"`
 	Soap    string   `xml:"soap,attr"`
 	Xsi     string   `xml:"xsi,attr"`
 	Xsd     string   `xml:"xsd,attr"`
 	Body    struct {
 		Text                   string `xml:",chardata"`
 		GetVehiclesV13Response struct {
+			Text                 string `xml:",chardata"`
+			Xmlns                string `xml:"xmlns,attr"`
 			GetVehiclesV13Result struct {
+				Text          string    `xml:",chardata"`
 				Executiontime string    `xml:"Executiontime,attr"`
 				Errors        TXError   `xml:"Errors"`
 				Warnings      TXWarning `xml:"Warnings"`
@@ -130,20 +117,9 @@ type GetVehicleResponse struct {
 							LicensePlate  string `xml:"LicensePlate"`
 							FormattedName string `xml:"FormattedName"`
 						} `xml:"Trailer"`
-						VehicleProfile struct {
-							Text               string `xml:",chardata"`
-							ProfileName        string `xml:"ProfileName"`
-							ProfileDescription string `xml:"ProfileDescription"`
-							IsDefaultProfile   string `xml:"IsDefaultProfile"`
-							ProfileType        string `xml:"ProfileType"`
-							ProfileID          string `xml:"ProfileId"`
-						} `xml:"VehicleProfile"`
 						VehicleTransicsID string `xml:"VehicleTransicsID"`
-						Modified          struct {
-							Text string `xml:",chardata"`
-							Nil  string `xml:"nil,attr"`
-						} `xml:"Modified"`
-						CurrentKms struct {
+						Modified          string `xml:"Modified"`
+						CurrentKms        struct {
 							Text string `xml:",chardata"`
 							Nil  string `xml:"nil,attr"`
 						} `xml:"CurrentKms"`
@@ -159,28 +135,7 @@ type GetVehicleResponse struct {
 							Text string `xml:",chardata"`
 							Nil  string `xml:"nil,attr"`
 						} `xml:"RefrigeratorIndex"`
-						Position struct {
-							Text                  string `xml:",chardata"`
-							Longitude             string `xml:"Longitude"`
-							Latitude              string `xml:"Latitude"`
-							AddressInfo           string `xml:"AddressInfo"`
-							DistanceFromCapitol   string `xml:"DistanceFromCapitol"`
-							DistanceFromLargeCity string `xml:"DistanceFromLargeCity"`
-							DistanceFromSmallCity string `xml:"DistanceFromSmallCity"`
-							CountryCode           string `xml:"CountryCode"`
-							Heading               struct {
-								Text string `xml:",chardata"`
-								Nil  string `xml:"nil,attr"`
-							} `xml:"Heading"`
-							LocationSource              string `xml:"LocationSource"`
-							DistanceFromPointOfInterest string `xml:"DistanceFromPointOfInterest"`
-						} `xml:"Position"`
-						Speed    string `xml:"Speed"`
-						Activity struct {
-							Text string `xml:",chardata"`
-							ID   string `xml:"ID"`
-							Name string `xml:"Name"`
-						} `xml:"Activity"`
+						Speed             string `xml:"Speed"`
 						ActivityCompleted struct {
 							Text string `xml:",chardata"`
 							Nil  string `xml:"nil,attr"`
@@ -195,29 +150,6 @@ type GetVehicleResponse struct {
 							FirstName     string `xml:"FirstName"`
 							FormattedName string `xml:"FormattedName"`
 						} `xml:"Driver"`
-						ObcInfo struct {
-							Text                  string `xml:",chardata"`
-							SoftwareVersion       string `xml:"SoftwareVersion"`
-							InstructionSetVersion string `xml:"InstructionSetVersion"`
-							Planningfeatures      struct {
-								Text           string `xml:",chardata"`
-								EnableTrips    string `xml:"Enable_Trips"`
-								EnableJobs     string `xml:"Enable_Jobs"`
-								EnablePlaces   string `xml:"Enable_Places"`
-								EnableProducts string `xml:"Enable_Products"`
-							} `xml:"Planningfeatures"`
-							UpdateProgress struct {
-								Text string `xml:",chardata"`
-								Nil  string `xml:"nil,attr"`
-							} `xml:"UpdateProgress"`
-							ResponseImage string `xml:"ResponseImage"`
-							IBC           struct {
-								Text string `xml:",chardata"`
-								Nil  string `xml:"nil,attr"`
-							} `xml:"IBC"`
-							ModemChannelID string `xml:"ModemChannelID"`
-							DeviceType     string `xml:"DeviceType"`
-						} `xml:"ObcInfo"`
 						ETAInfo struct {
 							Text                string `xml:",chardata"`
 							PositionDestination struct {
@@ -247,15 +179,6 @@ type GetVehicleResponse struct {
 								Nil  string `xml:"nil,attr"`
 							} `xml:"EtaRestIncluded"`
 						} `xml:"ETAInfo"`
-						InfoFieldList struct {
-							Text          string `xml:",chardata"`
-							InfoFieldItem []struct {
-								Text           string `xml:",chardata"`
-								Name           string `xml:"Name"`
-								Value          string `xml:"Value"`
-								DateLastUpdate string `xml:"DateLastUpdate"`
-							} `xml:"InfoFieldItem"`
-						} `xml:"InfoFieldList"`
 						UpdateDatesList struct {
 							Text            string `xml:",chardata"`
 							UpdateDatesItem []struct {
@@ -284,11 +207,13 @@ type GetVehicleResponse struct {
 	} `xml:"Body"`
 }
 
-//GetVehicle wraps SAOPCall to make a GetVehicle_13 request
-func GetVehicle(req *GetVehicleRequest) (*GetVehicleResponse, error) {
-	// add authentication to request
-	req.Login = *authenticate()
-	resp, err := soapCall(&req, "GetVehicle", getVehiculeTemplate)
+//GetVehicle wraps SAOPCall to make a Get_Vehicles_V13 request
+func GetVehicle() (*GetVehicleResponse, error) {
+	//make an authenticated request
+	params := &GetVehicleRequest{
+		Login: *authenticate(),
+	}
+	resp, err := soapCall(params, "GetVehicle", getVehiculeTemplate)
 	if err != nil {
 		return nil, err
 	}
@@ -299,8 +224,6 @@ func GetVehicle(req *GetVehicleRequest) (*GetVehicleResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(data.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.Code)
 
 	return data, nil
 }

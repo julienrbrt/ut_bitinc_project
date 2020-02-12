@@ -23,7 +23,7 @@ func InitDB() error {
 	dbPassword = url.QueryEscape(dbPassword)
 
 	//build connection string
-	dbURI := fmt.Sprintf("sqlserver://%s:%s@%s/instance?database=%s", dbUser, dbPassword, dbHost, dbName)
+	dbURI := fmt.Sprintf("sqlserver://%s:%s@%s:1433?database=%s", dbUser, dbPassword, dbHost, dbName)
 
 	//database connection
 	conn, err := gorm.Open("mssql", dbURI)
