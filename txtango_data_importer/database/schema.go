@@ -1,4 +1,4 @@
-package bolk
+package database
 
 import (
 	"time"

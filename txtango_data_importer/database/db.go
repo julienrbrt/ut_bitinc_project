@@ -1,5 +1,5 @@
-//Package bolk handles the better-driving database migration
-package bolk
+//Package database handles the better-driving database migration
+package database
 
 import (
 	"fmt"
