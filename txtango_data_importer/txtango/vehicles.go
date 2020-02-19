@@ -2,6 +2,7 @@ package txtango
 
 import (
 	"encoding/xml"
+	"fmt"
 )
 
 // http://integratorsprod.transics.com/Administration/Get_Vehicles.html
@@ -90,20 +91,20 @@ type GetVehicleResponse struct {
 							Category  string `xml:"Category"`
 							Statuses  struct {
 								Text         string `xml:",chardata"`
-								Company      string `xml:"Company"`
-								Rental       string `xml:"Rental"`
-								Loan         string `xml:"Loan"`
-								Truck        string `xml:"Truck"`
-								LightVehicle string `xml:"LightVehicle"`
-								DigitalTacho string `xml:"DigitalTacho"`
-								TractorUnit  string `xml:"TractorUnit"`
-								Coach        string `xml:"Coach"`
+								Company      bool   `xml:"Company"`
+								Rental       bool   `xml:"Rental"`
+								Loan         bool   `xml:"Loan"`
+								Truck        bool   `xml:"Truck"`
+								LightVehicle bool   `xml:"LightVehicle"`
+								DigitalTacho bool   `xml:"DigitalTacho"`
+								TractorUnit  bool   `xml:"TractorUnit"`
+								Coach        bool   `xml:"Coach"`
 							} `xml:"Statuses"`
 						} `xml:"ExtraTruckInfo"`
 						VehicleID           string `xml:"VehicleID"`
 						VehicleExternalCode string `xml:"VehicleExternalCode"`
 						LicensePlate        string `xml:"LicensePlate"`
-						Inactive            string `xml:"Inactive"`
+						Inactive            bool   `xml:"Inactive"`
 						CanBusConnection    struct {
 							Text string `xml:",chardata"`
 							Nil  string `xml:"nil,attr"`
@@ -224,6 +225,8 @@ func GetVehicle() (*GetVehicleResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(data.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13[0].Inactive)
 
 	return data, nil
 }

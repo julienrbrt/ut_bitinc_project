@@ -63,7 +63,7 @@ type GetDriversResponse struct {
 						Lastname           string `xml:"Lastname"`
 						Firstname          string `xml:"Firstname"`
 						Filter             string `xml:"Filter"`
-						Inactive           string `xml:"Inactive"`
+						Inactive           bool   `xml:"Inactive"`
 						Description        string `xml:"Description"`
 						Languages          struct {
 							Text                      string `xml:",chardata"`
@@ -92,7 +92,7 @@ type GetDriversResponse struct {
 								CountryCode string `xml:"CountryCode"`
 								CountryName string `xml:"CountryName"`
 							} `xml:"CountryOfIssue"`
-							TachoLoginEnabled string `xml:"TachoLoginEnabled"`
+							TachoLoginEnabled bool   `xml:"TachoLoginEnabled"`
 							RenewalIndex      string `xml:"RenewalIndex"`
 							ReplacementIndex  string `xml:"ReplacementIndex"`
 							StartOfValidity   struct {
