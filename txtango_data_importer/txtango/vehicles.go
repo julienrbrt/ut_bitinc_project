@@ -89,17 +89,6 @@ type GetVehicleResponse struct {
 							} `xml:"OutDuty"`
 							VinNumber string `xml:"VinNumber"`
 							Category  string `xml:"Category"`
-							Statuses  struct {
-								Text         string `xml:",chardata"`
-								Company      bool   `xml:"Company"`
-								Rental       bool   `xml:"Rental"`
-								Loan         bool   `xml:"Loan"`
-								Truck        bool   `xml:"Truck"`
-								LightVehicle bool   `xml:"LightVehicle"`
-								DigitalTacho bool   `xml:"DigitalTacho"`
-								TractorUnit  bool   `xml:"TractorUnit"`
-								Coach        bool   `xml:"Coach"`
-							} `xml:"Statuses"`
 						} `xml:"ExtraTruckInfo"`
 						VehicleID           string `xml:"VehicleID"`
 						VehicleExternalCode string `xml:"VehicleExternalCode"`
