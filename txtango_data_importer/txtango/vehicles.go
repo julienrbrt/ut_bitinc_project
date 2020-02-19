@@ -2,7 +2,6 @@ package txtango
 
 import (
 	"encoding/xml"
-	"fmt"
 )
 
 // http://integratorsprod.transics.com/Administration/Get_Vehicles.html
@@ -214,8 +213,6 @@ func GetVehicle() (*GetVehicleResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(data.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13[0].Inactive)
 
 	return data, nil
 }

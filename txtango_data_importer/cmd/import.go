@@ -10,8 +10,12 @@ var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Imports TX-TANGO database into better-driving database",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// connect to better-driver db
-		err := database.InitDB()
+		//TODO use go routine and wait groups
+		err := database.ImportTrucks()
+		if err != nil {
+			return err
+		}
+		err = database.ImportDrivers()
 		if err != nil {
 			return err
 		}

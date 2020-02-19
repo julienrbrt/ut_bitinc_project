@@ -27,7 +27,6 @@ func InitDB() error {
 
 	//database connection
 	conn, err := gorm.Open("mssql", dbURI)
-	defer conn.Close()
 	if err != nil {
 		return err
 	}
