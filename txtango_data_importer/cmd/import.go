@@ -12,7 +12,7 @@ var wg sync.WaitGroup
 
 var importCmd = &cobra.Command{
 	Use:   "import",
-	Short: "Imports TX-TANGO database into better-driving database",
+	Short: "Import TX-TANGO database into better-driving database",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var err error
 

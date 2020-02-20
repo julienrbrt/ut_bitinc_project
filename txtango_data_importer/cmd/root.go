@@ -10,7 +10,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "tx2db",
-	Short: "Tool linking the Transics TX-TANGO db to the better-driving db",
+	Short: "Imports the Transics TX-TANGO to Better-Driving",
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 		return nil
 	},
@@ -23,8 +23,4 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-func init() {
-
 }
