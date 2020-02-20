@@ -54,10 +54,10 @@ type GetActivityReportResponse struct {
 			Text                       string `xml:",chardata"`
 			Xmlns                      string `xml:"xmlns,attr"`
 			GetActivityReportV11Result struct {
-				Text                string `xml:",chardata"`
-				Executiontime       string `xml:"Executiontime,attr"`
-				Errors              string `xml:"Errors"`
-				Warnings            string `xml:"Warnings"`
+				Text                string    `xml:",chardata"`
+				Executiontime       string    `xml:"Executiontime,attr"`
+				Errors              TXError   `xml:"Errors"`
+				Warnings            TXWarning `xml:"Warnings"`
 				ActivityReportItems struct {
 					Text                  string `xml:",chardata"`
 					ActivityReportItemV11 []struct {

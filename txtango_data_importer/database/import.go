@@ -28,6 +28,16 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 		return err
 	}
 
+	//check and return error
+	if txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.CodeExplenation != "" {
+		return errors.New(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.CodeExplenation)
+	}
+
+	//check and print warning
+	if txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.CodeExplenation != "" {
+		fmt.Printf("WARNING: %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.CodeExplenation)
+	}
+
 	for i, data := range txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9 {
 		transicsID, err := strconv.Atoi(data.PersonTransicsID)
 		if err != nil {
@@ -58,6 +68,16 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 	txVehicle, err := txtango.GetVehicle()
 	if err != nil {
 		return err
+	}
+
+	//check and return error
+	if txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.CodeExplenation != "" {
+		return errors.New(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.CodeExplenation)
+	}
+
+	//check and print warning
+	if txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning.CodeExplenation != "" {
+		fmt.Printf("WARNING: %s\n", txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning.CodeExplenation)
 	}
 
 	for i, data := range txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13 {
