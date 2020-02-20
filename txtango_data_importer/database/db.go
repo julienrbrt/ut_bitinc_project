@@ -12,7 +12,8 @@ import (
 
 var db *gorm.DB
 
-//InitDB initialize the database
+//InitDB initialize the sql database
+//We are using an GO ORM named GORM
 func InitDB() error {
 	dbUser := os.Getenv("DB_USERNAME")
 	dbPassword := os.Getenv("DB_PASSWORD")

@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 	"tx2db/txtango"
 
@@ -10,13 +11,16 @@ import (
 )
 
 var (
-	loadingDataFromTransics = "Loading data from Transics TX-TANGO"
+	loadingDataFromTransics = "Loading data from Transics TX-TANGO... this could take a while..."
 	errParsingTransicsID    = "Error when parsing TransicsID"
 	errParsingDate          = "Error while parsing date from Transics TX-TANGO"
 )
 
 //ImportDrivers imports all the driver from TX-Tango and fill the database
-func ImportDrivers() error {
+func ImportDrivers(wg *sync.WaitGroup) error {
+	//notify WaitGroup that we're done
+	defer wg.Done()
+
 	//import data from transics
 	fmt.Println(loadingDataFromTransics)
 	txDrivers, err := txtango.GetDrivers()
@@ -45,7 +49,10 @@ func ImportDrivers() error {
 }
 
 //ImportTrucks imports all the trucks from TX-Tango and fill the database
-func ImportTrucks() error {
+func ImportTrucks(wg *sync.WaitGroup) error {
+	//notify WaitGroup that we're done
+	defer wg.Done()
+
 	//import data from transics
 	fmt.Println(loadingDataFromTransics)
 	txVehicle, err := txtango.GetVehicle()

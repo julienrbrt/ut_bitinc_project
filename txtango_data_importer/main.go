@@ -15,12 +15,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// connect to better-driver db
+	//connect to better-driver db
 	err = database.InitDB()
 	if err != nil {
 		panic(err)
 	}
 	defer database.DB().Close()
+
+	//connect to redis
+	err = database.InitRedis()
+	if err != nil {
+		panic(err)
+	}
+	defer database.RDB().Close()
 
 	cmd.Execute()
 }
