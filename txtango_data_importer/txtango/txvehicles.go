@@ -97,17 +97,9 @@ type GetVehicleResponse struct {
 							Text string `xml:",chardata"`
 							Nil  string `xml:"nil,attr"`
 						} `xml:"CanBusConnection"`
-						Trailer struct {
-							Text          string `xml:",chardata"`
-							ID            string `xml:"ID"`
-							TransicsID    string `xml:"TransicsID"`
-							Code          string `xml:"Code"`
-							Filter        string `xml:"Filter"`
-							LicensePlate  string `xml:"LicensePlate"`
-							FormattedName string `xml:"FormattedName"`
-						} `xml:"Trailer"`
-						VehicleTransicsID string `xml:"VehicleTransicsID"`
-						Modified          string `xml:"Modified"`
+						Trailer           TXTrailer `xml:"Trailer"`
+						VehicleTransicsID string    `xml:"VehicleTransicsID"`
+						Modified          string    `xml:"Modified"`
 						CurrentKms        struct {
 							Text string `xml:",chardata"`
 							Nil  string `xml:"nil,attr"`
@@ -194,6 +186,17 @@ type GetVehicleResponse struct {
 			} `xml:"Get_Vehicles_V13Result"`
 		} `xml:"Get_Vehicles_V13Response"`
 	} `xml:"Body"`
+}
+
+//TXTrailer represent a trailer from GetVehicleResponse
+type TXTrailer struct {
+	Text          string `xml:",chardata"`
+	ID            string `xml:"ID"`
+	TransicsID    string `xml:"TransicsID"`
+	Code          string `xml:"Code"`
+	Filter        string `xml:"Filter"`
+	LicensePlate  string `xml:"LicensePlate"`
+	FormattedName string `xml:"FormattedName"`
 }
 
 //GetVehicle wraps SAOPCall to make a Get_Vehicles_V13 request

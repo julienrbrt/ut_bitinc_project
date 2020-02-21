@@ -84,6 +84,9 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 	}
 
 	for i, data := range txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13 {
+		//import trailer of a vehicle asynchronously
+		go importTrailer(data.Trailer)
+
 		transicsID, err := strconv.Atoi(data.VehicleTransicsID)
 		if err != nil {
 			return errors.Wrap(err, errParsingTransicsID)
@@ -125,4 +128,19 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 	}
 
 	return nil
+}
+
+//imports the trailer of a vehicle
+func importTrailer(txTrailer txtango.TXTrailer) {
+	transicsID, err := strconv.Atoi(txTrailer.TransicsID)
+	if err != nil || transicsID == 0 {
+		return
+	}
+
+	trailer := Trailer{
+		TransicsID:   transicsID,
+		LicensePlate: txTrailer.LicensePlate,
+	}
+
+	db.FirstOrCreate(&trailer, trailer)
 }
