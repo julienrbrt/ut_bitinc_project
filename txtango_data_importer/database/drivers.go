@@ -23,57 +23,6 @@ type Driver struct {
 	LastModified             time.Time
 }
 
-//DriverEcoMonitorReport represents the eco monitor report of a driver
-//EcoMonitorReport trip is determined from contact ON to contact OFF
-type DriverEcoMonitorReport struct {
-	gorm.Model
-	DriverID                                           uint
-	TourID                                             uint
-	TransicsID                                         int
-	Distance                                           float32
-	DurationDriving                                    float32
-	FuelConsumption                                    float32
-	FuelConsumptionAverage                             float32
-	RpmAverage                                         float32
-	EmissionAverage                                    float32
-	SpeedAverage                                       float32
-	FuelConsumptionIdling                              float32
-	DurationIdling                                     float32
-	NumberIdling                                       int
-	DurationOverSpeeding                               float32
-	NumberOverSpeeding                                 int
-	DistanceCoasting                                   float32
-	DurationCoasting                                   float32
-	NumberOfStops                                      int
-	NumberOfBrakes                                     int
-	NumberOfPanicBrakes                                int
-	DistanceByBrakes                                   float32
-	DurationByBrakes                                   float32
-	DurationByRetarder                                 float32
-	DurationHighRPMnoFuel                              float32
-	DurationHighRPM                                    float32
-	NumberOfHarshAccelerations                         float32
-	DurationHarshAcceleration                          float32
-	DistanceGreenSpot                                  float32
-	DurationGreenSpot                                  float32
-	FuelConsumptionGreenSpot                           float32
-	NumberOfGearChanges                                int
-	NumberOfGearChangesUp                              int
-	PositionOfThrottleAverage                          float32
-	PositionOfThrottleMaximum                          float32
-	NumberOfPto                                        int
-	FuelConsumptionPtoDriving                          float32
-	FuelConsumptionPtoStandStill                       float32
-	DurationPtoDriving                                 float32
-	DurationPtoStandStill                              float32
-	DistanceOnCruiseControl                            float32
-	DurationOnCruiseControl                            float32
-	AvgFuelConsumptionCruiseControlInLiterPerHundredKm float32
-	AvgFuelConsumptionCruiseControlInkmPerLiter        float32
-	StartTime                                          time.Time
-	EndTime                                            time.Time
-}
-
 //ImportDrivers imports all the driver from TX-Tango and fill the database
 func ImportDrivers(wg *sync.WaitGroup) error {
 	//notify WaitGroup that we're done

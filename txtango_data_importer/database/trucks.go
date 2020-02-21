@@ -15,6 +15,7 @@ var (
 	loadingDataFromTransics = "Loading data from Transics TX-TANGO... this could take a while..."
 	errParsingTransicsID    = "Error when parsing TransicsID"
 	errParsingDate          = "Error while parsing date from Transics TX-TANGO"
+	errParsingCoordinates   = "Error parsing destination coordinates"
 	errDatabaseConnection   = "Connection error to the database"
 )
 
@@ -45,27 +46,6 @@ type Trailer struct {
 	LicensePlate string
 }
 
-//TruckActivityReport represents the activity report of a specific truck
-type TruckActivityReport struct {
-	gorm.Model
-	TruckID      uint
-	TourID       uint
-	TransicsID   uint
-	KmBegin      int
-	KmEnd        int
-	Consumption  float32
-	LoadedStatus string
-	Activity     string
-	SpeedAvg     int
-	Longitude    float32
-	Latitude     float32
-	AddressInfo  string
-	CountryCode  string
-	Reference    string
-	StartTime    time.Time
-	EndTime      time.Time
-}
-
 //ImportTrucks imports all the trucks from TX-Tango and fill the database
 func ImportTrucks(wg *sync.WaitGroup) error {
 	//notify WaitGroup that we're done
@@ -90,7 +70,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 
 	for i, data := range txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13 {
 		//import trailer of a vehicle asynchronously
-		go addTrailer(data.Trailer)
+		go addTrailer(&data.Trailer)
 
 		transicsID, err := strconv.ParseUint(data.VehicleTransicsID, 10, 64)
 		if err != nil {
@@ -131,8 +111,51 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		//add truck
 		fmt.Printf("(%d / %d) %s truck %d\n", i+1, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), status, newTruck.TransicsID)
 
+		// start tour import and creation flow
+		go func() error {
+			//get driver
+			transicsID, err := strconv.ParseUint(data.Driver.TransicsID, 10, 64)
+			if err != nil {
+				return errors.Wrap(err, errParsingTransicsID)
+			}
+
+			driver := Driver{TransicsID: uint(transicsID)}
+			if err := db.Model(&driver).Find(&driver).Error; err != nil {
+				return err
+			}
+
+			//get trailer
+			transicsID, err = strconv.ParseUint(data.Trailer.TransicsID, 10, 64)
+			if err != nil {
+				return errors.Wrap(err, errParsingTransicsID)
+			}
+
+			trailer := Trailer{TransicsID: uint(transicsID)}
+			if err := db.Model(&trailer).Find(&trailer).Error; err != nil {
+				return err
+			}
+
+			//get destination coordinates
+			longitude, err := strconv.ParseFloat(data.ETAInfo.PositionDestination.Longitude, 32)
+			if err != nil {
+				return errors.Wrap(err, errParsingCoordinates)
+			}
+
+			latitude, err := strconv.ParseFloat(data.ETAInfo.PositionDestination.Latitude, 32)
+			if err != nil {
+				return errors.Wrap(err, errParsingCoordinates)
+			}
+
+			err = checkTour(&truck, &driver, &trailer, data.ETAInfo.ETAStatus.Text, float32(longitude), float32(latitude))
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}()
+
 		//add truck to group
-		addGroup(newTruck, data.Groups.TxConnectGroups.ConnectGroups.ConnectGroup[0].SubGroup)
+		addGroup(&newTruck, data.Groups.TxConnectGroups.ConnectGroups.ConnectGroup[0].SubGroup)
 	}
 
 	return nil
@@ -140,7 +163,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 
 //add the trailer of a truck
 //as error are not extremely important for this sub-category, there no error handling
-func addTrailer(txTrailer txtango.TXTrailer) {
+func addTrailer(txTrailer *txtango.TXTrailer) {
 	transicsID, err := strconv.ParseUint(txTrailer.TransicsID, 10, 64)
 	if err != nil || transicsID == 0 {
 		return
@@ -156,7 +179,7 @@ func addTrailer(txTrailer txtango.TXTrailer) {
 
 //assign a group to a truck
 //as error are not extremely important for this sub-category, there no error handling
-func addGroup(truck Truck, groupName string) {
+func addGroup(truck *Truck, groupName string) {
 	truckGroup := TruckGroup{Name: groupName}
 	db.FirstOrCreate(&truckGroup, truckGroup)
 
