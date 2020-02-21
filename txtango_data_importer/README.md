@@ -5,7 +5,17 @@ It will checks what fields are already present in the database before importing.
 
 The efficient way to import periodically data is to use **CRON**.
 
+## Requirements
+
+* Go
+* SQL Server
+* Redis
+
 ## Configuration
+
+### .env
+
+The credentials of used services must be filled in the `.env` file. You can find an example of what information to fill-in in [.env.example](.env.example).
 
 ### MSSQL
 

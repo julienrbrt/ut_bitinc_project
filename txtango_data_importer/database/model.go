@@ -9,9 +9,11 @@ import (
 //Driver represents driver of a truck
 type Driver struct {
 	gorm.Model
-	TransicsID int
-	Name       string
-	Language   string
+	TransicsID   int
+	Name         string
+	Language     string
+	Inactive     bool
+	LastModified time.Time
 }
 
 //DriverEcoMonitorReport represents the eco monitor report of a driver

@@ -7,6 +7,7 @@ import (
 	"time"
 	"tx2db/txtango"
 
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -14,6 +15,7 @@ var (
 	loadingDataFromTransics = "Loading data from Transics TX-TANGO... this could take a while..."
 	errParsingTransicsID    = "Error when parsing TransicsID"
 	errParsingDate          = "Error while parsing date from Transics TX-TANGO"
+	errDatabaseConnection   = "Connection error to the database"
 )
 
 //ImportDrivers imports all the driver from TX-Tango and fill the database
@@ -44,15 +46,39 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 			return errors.Wrap(err, errParsingTransicsID)
 		}
 
-		driver := Driver{
-			TransicsID: transicsID,
-			Name:       data.FormattedName,
-			Language:   data.Languages.WorkingLanguage,
+		//parse modified date into time.Time if existing
+		modifiedDate, err := time.Parse("2006-01-02T15:04:05", data.UpdateDatesList.UpdateDatesItem.DateLastUpdate)
+		if err != nil {
+			fmt.Println(errParsingDate)
+			modifiedDate = time.Time{}
 		}
 
-		//add driver
-		fmt.Printf("(%d / %d) Importing driver %d\n", i, len(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9), driver.TransicsID)
-		db.FirstOrCreate(&driver)
+		newDriver := Driver{
+			TransicsID:   transicsID,
+			Name:         data.FormattedName,
+			Language:     data.Languages.WorkingLanguage,
+			Inactive:     data.Inactive,
+			LastModified: modifiedDate,
+		}
+
+		//add or update driver
+		var driver Driver
+		status := "Skipped"
+
+		if err = db.Where(Driver{TransicsID: newDriver.TransicsID}).First(&driver).Error; err != nil {
+			if err != gorm.ErrRecordNotFound {
+				return errors.Wrap(err, errDatabaseConnection)
+			}
+			// add driver
+			status = "Importing"
+			db.Create(&newDriver)
+		} else if driver.LastModified.Before(newDriver.LastModified) {
+			// update driver
+			status = "Updated"
+			db.Model(&driver).Where(Driver{TransicsID: newDriver.TransicsID}).Update(newDriver)
+		}
+
+		fmt.Printf("(%d / %d) %s driver %d\n", i+1, len(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9), status, newDriver.TransicsID)
 	}
 
 	return nil
@@ -86,21 +112,39 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 			return errors.Wrap(err, errParsingTransicsID)
 		}
 
-		modifiedDate, err := time.Parse(time.RFC3339, data.Modified)
+		//parse modified date into time.Time if existing
+		modifiedDate, err := time.Parse("2006-01-02T15:04:05", data.Modified)
 		if err != nil {
-			return errors.Wrap(err, errParsingDate)
+			fmt.Println(errParsingDate)
+			modifiedDate = time.Time{}
 		}
 
-		truck := Truck{
+		newTruck := Truck{
 			TransicsID:   transicsID,
 			LicensePlate: data.LicensePlate,
 			Inactive:     data.Inactive,
 			LastModified: modifiedDate,
 		}
 
-		//add driver
-		fmt.Printf("(%d / %d) Importing truck %d\n", i, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), truck.TransicsID)
-		db.FirstOrCreate(&truck)
+		//add or update truck
+		var truck Truck
+		status := "Skipped"
+
+		if err = db.Where(Truck{TransicsID: newTruck.TransicsID}).First(&truck).Error; err != nil {
+			if err != gorm.ErrRecordNotFound {
+				return errors.Wrap(err, errDatabaseConnection)
+			}
+			// add truck
+			status = "Importing"
+			db.Create(&newTruck)
+		} else if truck.LastModified.Before(newTruck.LastModified) {
+			// update truck
+			status = "Updated"
+			db.Model(&truck).Where(Truck{TransicsID: newTruck.TransicsID}).Update(newTruck)
+		}
+
+		//add truck
+		fmt.Printf("(%d / %d) %s truck %d\n", i+1, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), status, newTruck.TransicsID)
 	}
 
 	return nil

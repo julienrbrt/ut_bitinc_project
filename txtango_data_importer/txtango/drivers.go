@@ -15,7 +15,7 @@ var getDriversTemplate = `
       <DriverSelection>
 		<IncludeContactInfo>false</IncludeContactInfo>
 		<IncludeGroups>false</IncludeGroups>
-		<IncludeInactiveDrivers>false</IncludeInactiveDrivers>
+		<IncludeInactiveDrivers>true</IncludeInactiveDrivers>
 		<IncludeLastVehicleInfo>false</IncludeLastVehicleInfo>
 		<IncludeLicenseInfo>false</IncludeLicenseInfo>
 		<IncludeTachoCardInfo>true</IncludeTachoCardInfo>
