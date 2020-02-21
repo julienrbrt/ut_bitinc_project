@@ -12,11 +12,11 @@ import (
 //Example Driver A and Driver B in the same trip will result in 2 Tours
 type Tour struct {
 	gorm.Model
-	Truck                  Truck                    `gorm:"foreignkey:TransicsID"`
-	Driver                 Driver                   `gorm:"foreignkey:TransicsID"`
-	Trailer                Trailer                  `gorm:"foreignkey:TransicsID"`
-	TruckActivityReport    []TruckActivityReport    `gorm:"foreignkey:TransicsID"`
-	DriverEcoMonitorReport []DriverEcoMonitorReport `gorm:"foreignkey:TransicsID"`
+	TruckID                uint
+	DriverID               uint
+	TrailerID              uint
+	TruckActivityReport    []TruckActivityReport    `gorm:"foreignkey:TourID"`
+	DriverEcoMonitorReport []DriverEcoMonitorReport `gorm:"foreignkey:TourID"`
 	StartTime              time.Time
 	EndTime                time.Time
 }

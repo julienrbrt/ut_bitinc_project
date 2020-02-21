@@ -14,18 +14,21 @@ import (
 //Driver represents driver of a truck
 type Driver struct {
 	gorm.Model
-	TransicsID   int
-	Name         string
-	Language     string
-	Inactive     bool
-	LastModified time.Time
+	DriverEcoMonitorReportID []DriverEcoMonitorReport `gorm:"foreignkey:DriverID"`
+	Tour                     []Tour                   `gorm:"foreignkey:DriverID"`
+	TransicsID               uint
+	Name                     string
+	Language                 string
+	Inactive                 bool
+	LastModified             time.Time
 }
 
 //DriverEcoMonitorReport represents the eco monitor report of a driver
 //EcoMonitorReport trip is determined from contact ON to contact OFF
 type DriverEcoMonitorReport struct {
 	gorm.Model
-	Driver                                             Driver `gorm:"foreignkey:TransicsID"`
+	DriverID                                           uint
+	TourID                                             uint
 	TransicsID                                         int
 	Distance                                           float32
 	DurationDriving                                    float32
@@ -94,7 +97,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 	}
 
 	for i, data := range txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9 {
-		transicsID, err := strconv.Atoi(data.PersonTransicsID)
+		transicsID, err := strconv.ParseUint(data.PersonTransicsID, 10, 64)
 		if err != nil {
 			return errors.Wrap(err, errParsingTransicsID)
 		}
@@ -107,7 +110,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 		}
 
 		newDriver := Driver{
-			TransicsID:   transicsID,
+			TransicsID:   uint(transicsID),
 			Name:         data.FormattedName,
 			Language:     data.Languages.WorkingLanguage,
 			Inactive:     data.Inactive,

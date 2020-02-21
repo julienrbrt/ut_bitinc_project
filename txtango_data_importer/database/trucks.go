@@ -21,31 +21,36 @@ var (
 //Truck represents trucks
 type Truck struct {
 	gorm.Model
-	TransicsID   int
-	LicensePlate string
-	Inactive     bool
-	LastModified time.Time
+	TruckGroupID        uint
+	TruckActivityReport []TruckActivityReport `gorm:"foreignkey:TruckID"`
+	Tour                []Tour                `gorm:"foreignkey:TruckID"`
+	TransicsID          uint
+	LicensePlate        string
+	Inactive            bool
+	LastModified        time.Time
 }
 
 //TruckGroup represents group of truck
 type TruckGroup struct {
 	gorm.Model
 	Name  string
-	Truck []Truck `gorm:"foreignkey:TransicsID"`
+	Truck []Truck `gorm:"foreignkey:TruckGroupID"`
 }
 
 //Trailer represents a trailer
 type Trailer struct {
 	gorm.Model
-	TransicsID   int
+	Tour         []Tour `gorm:"foreignkey:TrailerID"`
+	TransicsID   uint
 	LicensePlate string
 }
 
 //TruckActivityReport represents the activity report of a specific truck
 type TruckActivityReport struct {
 	gorm.Model
-	TransicsID   int
-	Truck        Truck `gorm:"foreignkey:TransicsID"`
+	TruckID      uint
+	TourID       uint
+	TransicsID   uint
 	KmBegin      int
 	KmEnd        int
 	Consumption  float32
@@ -85,9 +90,9 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 
 	for i, data := range txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13 {
 		//import trailer of a vehicle asynchronously
-		go importTrailer(data.Trailer)
+		go addTrailer(data.Trailer)
 
-		transicsID, err := strconv.Atoi(data.VehicleTransicsID)
+		transicsID, err := strconv.ParseUint(data.VehicleTransicsID, 10, 64)
 		if err != nil {
 			return errors.Wrap(err, errParsingTransicsID)
 		}
@@ -100,7 +105,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		}
 
 		newTruck := Truck{
-			TransicsID:   transicsID,
+			TransicsID:   uint(transicsID),
 			LicensePlate: data.LicensePlate,
 			Inactive:     data.Inactive,
 			LastModified: modifiedDate,
@@ -125,22 +130,42 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 
 		//add truck
 		fmt.Printf("(%d / %d) %s truck %d\n", i+1, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), status, newTruck.TransicsID)
+
+		//add truck to group
+		addGroup(newTruck, data.Groups.TxConnectGroups.ConnectGroups.ConnectGroup[0].SubGroup)
 	}
 
 	return nil
 }
 
-//imports the trailer of a vehicle
-func importTrailer(txTrailer txtango.TXTrailer) {
-	transicsID, err := strconv.Atoi(txTrailer.TransicsID)
+//add the trailer of a truck
+//as error are not extremely important for this sub-category, there no error handling
+func addTrailer(txTrailer txtango.TXTrailer) {
+	transicsID, err := strconv.ParseUint(txTrailer.TransicsID, 10, 64)
 	if err != nil || transicsID == 0 {
 		return
 	}
 
 	trailer := Trailer{
-		TransicsID:   transicsID,
+		TransicsID:   uint(transicsID),
 		LicensePlate: txTrailer.LicensePlate,
 	}
 
 	db.FirstOrCreate(&trailer, trailer)
+}
+
+//assign a group to a truck
+//as error are not extremely important for this sub-category, there no error handling
+func addGroup(truck Truck, groupName string) {
+	truckGroup := TruckGroup{Name: groupName}
+	db.FirstOrCreate(&truckGroup, truckGroup)
+
+	if err := db.Model(&truckGroup).Association("Truck").Find(&truck).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return
+		}
+
+		fmt.Printf("Truck %d added to TruckGroup %s (now containing %d trucks)\n", truck.TransicsID, groupName, db.Model(&truckGroup).Association("Truck").Count())
+		db.Model(&truckGroup).Association("Truck").Append(truck)
+	}
 }
