@@ -18,70 +18,47 @@ var (
 	errDatabaseConnection   = "Connection error to the database"
 )
 
-//ImportDrivers imports all the driver from TX-Tango and fill the database
-func ImportDrivers(wg *sync.WaitGroup) error {
-	//notify WaitGroup that we're done
-	defer wg.Done()
+//Truck represents trucks
+type Truck struct {
+	gorm.Model
+	TransicsID   int
+	LicensePlate string
+	Inactive     bool
+	LastModified time.Time
+}
 
-	//import data from transics
-	fmt.Println(loadingDataFromTransics)
-	txDrivers, err := txtango.GetDrivers()
-	if err != nil {
-		return err
-	}
+//TruckGroup represents group of truck
+type TruckGroup struct {
+	gorm.Model
+	Name  string
+	Truck []Truck `gorm:"foreignkey:TransicsID"`
+}
 
-	//check and return error
-	if txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.CodeExplenation != "" {
-		return errors.New(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.CodeExplenation)
-	}
+//Trailer represents a trailer
+type Trailer struct {
+	gorm.Model
+	TransicsID   int
+	LicensePlate string
+}
 
-	//check and print warning
-	if txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.CodeExplenation != "" {
-		fmt.Printf("WARNING: %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.CodeExplenation)
-	}
-
-	for i, data := range txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9 {
-		transicsID, err := strconv.Atoi(data.PersonTransicsID)
-		if err != nil {
-			return errors.Wrap(err, errParsingTransicsID)
-		}
-
-		//parse modified date into time.Time if existing
-		modifiedDate, err := time.Parse("2006-01-02T15:04:05", data.UpdateDatesList.UpdateDatesItem.DateLastUpdate)
-		if err != nil {
-			fmt.Println(errParsingDate)
-			modifiedDate = time.Time{}
-		}
-
-		newDriver := Driver{
-			TransicsID:   transicsID,
-			Name:         data.FormattedName,
-			Language:     data.Languages.WorkingLanguage,
-			Inactive:     data.Inactive,
-			LastModified: modifiedDate,
-		}
-
-		//add or update driver
-		var driver Driver
-		status := "Skipped"
-
-		if err = db.Where(Driver{TransicsID: newDriver.TransicsID}).First(&driver).Error; err != nil {
-			if err != gorm.ErrRecordNotFound {
-				return errors.Wrap(err, errDatabaseConnection)
-			}
-			// add driver
-			status = "Importing"
-			db.Create(&newDriver)
-		} else if driver.LastModified.Before(newDriver.LastModified) {
-			// update driver
-			status = "Updated"
-			db.Model(&driver).Where(Driver{TransicsID: newDriver.TransicsID}).Update(newDriver)
-		}
-
-		fmt.Printf("(%d / %d) %s driver %d\n", i+1, len(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9), status, newDriver.TransicsID)
-	}
-
-	return nil
+//TruckActivityReport represents the activity report of a specific truck
+type TruckActivityReport struct {
+	gorm.Model
+	TransicsID   int
+	Truck        Truck `gorm:"foreignkey:TransicsID"`
+	KmBegin      int
+	KmEnd        int
+	Consumption  float32
+	LoadedStatus string
+	Activity     string
+	SpeedAvg     int
+	Longitude    float32
+	Latitude     float32
+	AddressInfo  string
+	CountryCode  string
+	Reference    string
+	StartTime    time.Time
+	EndTime      time.Time
 }
 
 //ImportTrucks imports all the trucks from TX-Tango and fill the database

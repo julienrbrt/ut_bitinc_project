@@ -11,28 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//TXError parses errors message in response
-type TXError struct {
-	Text  string `xml:",chardata"`
-	Error struct {
-		Code            string `xml:"ErrorCode"`
-		CodeExplenation string `xml:"ErrorCodeExplenation"`
-		Field           string `xml:"Field"`
-		Value           string `xml:"Value"`
-	} `xml:"Error"`
-}
-
-//TXWarning parses warning message in response
-type TXWarning struct {
-	Text    string `xml:",chardata"`
-	Warning struct {
-		Code            string `xml:"WarningCode"`
-		CodeExplenation string `xml:"WarningCodeExplenation"`
-		Field           string `xml:"Field"`
-		Value           string `xml:"Value"`
-	} `xml:"Warning"`
-}
-
 //soapCall generate a request given a request and a template and sends it
 func soapCall(params interface{}, tmplName, tmplRaw string) ([]byte, error) {
 	//construct the request using a template
