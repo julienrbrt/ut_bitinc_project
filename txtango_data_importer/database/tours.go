@@ -164,7 +164,7 @@ func ImportActivityReport() error {
 
 	var tours []Tour
 	//getting the lastest tours which has been end in the past 3 dats
-	err := db.Where("last_import IS NULL AND (end_date > ? OR end_date IS NULL)", now.AddDate(0, 0, -3)).Find(&tours).Error
+	err := db.Where("last_import IS NULL AND (end_time > ? OR end_time IS NULL)", now.AddDate(0, 0, -3)).Find(&tours).Error
 	if err != nil {
 		return errors.Wrap(err, errDatabaseConnection)
 	}
