@@ -35,7 +35,7 @@ var getEcoReport = `
 type GetEcoReportRequest struct {
 	// every request must implement the login
 	Login            Login
-	DriverTransicsID int
+	DriverTransicsID uint
 	StartDate        string
 	EndDate          string
 }
@@ -61,14 +61,14 @@ type GetEcoReportResponse struct {
 					Text                   string `xml:",chardata"`
 					EcoMonitorReportItemV3 []struct {
 						Text            string `xml:",chardata"`
-						TransicsID      string `xml:"TransicsID"`
+						TransicsID      uint   `xml:"TransicsID"`
 						Scope           string `xml:"Scope"`
 						IsConfidentData string `xml:"IsConfidentData"`
 						TripReference   string `xml:"TripReference"`
 						Vehicle         struct {
 							Text         string `xml:",chardata"`
 							ID           string `xml:"ID"`
-							TransicsID   string `xml:"TransicsID"`
+							TransicsID   uint   `xml:"TransicsID"`
 							Code         string `xml:"Code"`
 							Filter       string `xml:"Filter"`
 							LicensePlate string `xml:"LicensePlate"`
@@ -77,7 +77,7 @@ type GetEcoReportResponse struct {
 						Driver  struct {
 							Text       string `xml:",chardata"`
 							ID         string `xml:"ID"`
-							TransicsID string `xml:"TransicsID"`
+							TransicsID uint   `xml:"TransicsID"`
 							Code       string `xml:"Code"`
 							Filter     string `xml:"Filter"`
 							LastName   string `xml:"LastName"`
@@ -187,7 +187,7 @@ type GetEcoReportResponse struct {
 
 //GetEcoReport wraps SAOPCall to make a Get_EcoMonitor_Report_V4 request
 //the date argument is used to get the report of a specific date
-func GetEcoReport(driverTransicsID int, date time.Time) (*GetEcoReportResponse, error) {
+func GetEcoReport(driverTransicsID uint, date time.Time) (*GetEcoReportResponse, error) {
 	startDate := date.Format("2006-01-02")
 	// add a day to find the end date
 	endDate := date.AddDate(0, 0, 1).Format("2006-01-02")

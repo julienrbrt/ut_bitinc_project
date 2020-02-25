@@ -31,7 +31,7 @@ var importCmd = &cobra.Command{
 			return err
 		}
 
-		err = database.ImportToursData()
+		err = database.ImportActivityReport()
 		if err != nil {
 			return err
 		}

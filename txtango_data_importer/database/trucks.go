@@ -2,7 +2,6 @@ package database
 
 import (
 	"log"
-	"strconv"
 	"sync"
 	"time"
 	"tx2db/txtango"
@@ -23,8 +22,8 @@ var (
 type Truck struct {
 	gorm.Model
 	TruckGroupID        uint
-	TruckActivityReport []TruckActivityReport `gorm:"foreignkey:TruckID"`
-	Tour                []Tour                `gorm:"foreignkey:TruckID"`
+	TruckActivityReport []TruckActivityReport `gorm:"foreignkey:TruckTransicsID"`
+	Tour                []Tour                `gorm:"foreignkey:TruckTransicsID"`
 	TransicsID          uint
 	LicensePlate        string
 	Inactive            bool
@@ -41,7 +40,7 @@ type TruckGroup struct {
 //Trailer represents a trailer
 type Trailer struct {
 	gorm.Model
-	Tour         []Tour `gorm:"foreignkey:TrailerID"`
+	Tour         []Tour `gorm:"foreignkey:TrailerTransicsID"`
 	TransicsID   uint
 	LicensePlate string
 }
@@ -72,11 +71,6 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		//import trailer of a vehicle asynchronously
 		go addTrailer(&data.Trailer)
 
-		transicsID, err := strconv.ParseUint(data.VehicleTransicsID, 10, 64)
-		if err != nil {
-			return errors.Wrap(err, errParsingTransicsID)
-		}
-
 		//parse modified date into time.Time if existing
 		modifiedDate, err := time.Parse("2006-01-02T15:04:05", data.Modified)
 		if err != nil {
@@ -85,7 +79,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		}
 
 		newTruck := Truck{
-			TransicsID:   uint(transicsID),
+			TransicsID:   data.VehicleTransicsID,
 			LicensePlate: data.LicensePlate,
 			Inactive:     data.Inactive,
 			LastModified: modifiedDate,
@@ -113,7 +107,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		log.Printf("(%d / %d) %s truck %d\n", i+1, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), status, newTruck.TransicsID)
 
 		//start tour flow
-		err = checkTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.ETAStatus.Text, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude)
+		err = buildTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.ETAStatus.Text, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude)
 		if err != nil {
 			// TODO add proper error handling
 			log.Print(err)
@@ -127,15 +121,15 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 }
 
 //add the trailer of a truck
-//as error are not extremely important for this sub-category, there no error handling
+//as error are not important for this sub-category, there no error handling
 func addTrailer(txTrailer *txtango.TXTrailer) {
-	transicsID, err := strconv.ParseUint(txTrailer.TransicsID, 10, 64)
-	if err != nil || transicsID == 0 {
+	// do not create unexisting trailer
+	if txTrailer.TransicsID == 0 {
 		return
 	}
 
 	trailer := Trailer{
-		TransicsID:   uint(transicsID),
+		TransicsID:   txTrailer.TransicsID,
 		LicensePlate: txTrailer.LicensePlate,
 	}
 
@@ -143,7 +137,7 @@ func addTrailer(txTrailer *txtango.TXTrailer) {
 }
 
 //assign a group to a truck
-//as error are not extremely important for this sub-category, there no error handling
+//as error are not important for this sub-category, there no error handling
 func addGroup(truck *Truck, groupName string) {
 	truckGroup := TruckGroup{Name: groupName}
 	db.FirstOrCreate(&truckGroup, truckGroup)

@@ -36,7 +36,7 @@ var getActivityReportTemplate = `
 type GetActivityReportRequest struct {
 	// every request must implement the login
 	Login             Login
-	VehicleTransicsID int
+	VehicleTransicsID uint
 	StartDate         string
 	EndDate           string
 }
@@ -71,7 +71,7 @@ type GetActivityReportResponse struct {
 						Vehicle struct {
 							Text          string `xml:",chardata"`
 							ID            string `xml:"ID"`
-							TransicsID    string `xml:"TransicsID"`
+							TransicsID    uint   `xml:"TransicsID"`
 							Code          string `xml:"Code"`
 							Filter        string `xml:"Filter"`
 							LicensePlate  string `xml:"LicensePlate"`
@@ -80,7 +80,7 @@ type GetActivityReportResponse struct {
 						Trailer struct {
 							Text          string `xml:",chardata"`
 							ID            string `xml:"ID"`
-							TransicsID    string `xml:"TransicsID"`
+							TransicsID    uint   `xml:"TransicsID"`
 							Code          string `xml:"Code"`
 							Filter        string `xml:"Filter"`
 							LicensePlate  string `xml:"LicensePlate"`
@@ -153,7 +153,7 @@ type GetActivityReportResponse struct {
 
 //GetActivityReport wraps SAOPCall to make a Get_ActivityReport_V11 request
 //the date argument is used to get the report of a specific date
-func GetActivityReport(vehicleTransicsID int, date time.Time) (*GetActivityReportResponse, error) {
+func GetActivityReport(vehicleTransicsID uint, date time.Time) (*GetActivityReportResponse, error) {
 	startDate := date.Format("2006-01-02")
 	// add a day to find the end date
 	endDate := date.AddDate(0, 0, 1).Format("2006-01-02")

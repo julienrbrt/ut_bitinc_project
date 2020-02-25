@@ -98,7 +98,7 @@ type GetVehicleResponse struct {
 							Nil  string `xml:"nil,attr"`
 						} `xml:"CanBusConnection"`
 						Trailer           TXTrailer `xml:"Trailer"`
-						VehicleTransicsID string    `xml:"VehicleTransicsID"`
+						VehicleTransicsID uint      `xml:"VehicleTransicsID"`
 						Modified          string    `xml:"Modified"`
 						CurrentKms        struct {
 							Text string `xml:",chardata"`
@@ -124,7 +124,7 @@ type GetVehicleResponse struct {
 						Driver struct {
 							Text          string `xml:",chardata"`
 							ID            string `xml:"ID"`
-							TransicsID    string `xml:"TransicsID"`
+							TransicsID    uint   `xml:"TransicsID"`
 							Code          string `xml:"Code"`
 							Filter        string `xml:"Filter"`
 							LastName      string `xml:"LastName"`
@@ -192,7 +192,7 @@ type GetVehicleResponse struct {
 type TXTrailer struct {
 	Text          string `xml:",chardata"`
 	ID            string `xml:"ID"`
-	TransicsID    string `xml:"TransicsID"`
+	TransicsID    uint   `xml:"TransicsID"`
 	Code          string `xml:"Code"`
 	Filter        string `xml:"Filter"`
 	LicensePlate  string `xml:"LicensePlate"`

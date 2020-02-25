@@ -71,7 +71,7 @@ type GetDriversResponse struct {
 							ObcUILanguage             string `xml:"ObcUILanguage"`
 							ObcInstructionSetLanguage string `xml:"ObcInstructionSetLanguage"`
 						} `xml:"Languages"`
-						PersonTransicsID string `xml:"PersonTransicsId"` // important as identifier used thorough the code
+						PersonTransicsID uint `xml:"PersonTransicsId"` // important as identifier used thorough the code
 						UpdateDatesList  struct {
 							Text            string `xml:",chardata"`
 							UpdateDatesItem struct {

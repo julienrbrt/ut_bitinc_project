@@ -2,7 +2,6 @@ package database
 
 import (
 	"log"
-	"strconv"
 	"sync"
 	"time"
 	"tx2db/txtango"
@@ -14,8 +13,8 @@ import (
 //Driver represents driver of a truck
 type Driver struct {
 	gorm.Model
-	DriverEcoMonitorReportID []DriverEcoMonitorReport `gorm:"foreignkey:DriverID"`
-	Tour                     []Tour                   `gorm:"foreignkey:DriverID"`
+	DriverEcoMonitorReportID []DriverEcoMonitorReport `gorm:"foreignkey:DriverTransicsID"`
+	Tour                     []Tour                   `gorm:"foreignkey:DriverTransicsID"`
 	TransicsID               uint
 	Name                     string
 	Language                 string
@@ -46,11 +45,6 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 	}
 
 	for i, data := range txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9 {
-		transicsID, err := strconv.ParseUint(data.PersonTransicsID, 10, 64)
-		if err != nil {
-			return errors.Wrap(err, errParsingTransicsID)
-		}
-
 		//parse modified date into time.Time if existing
 		modifiedDate, err := time.Parse("2006-01-02T15:04:05", data.UpdateDatesList.UpdateDatesItem.DateLastUpdate)
 		if err != nil {
@@ -59,7 +53,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 		}
 
 		newDriver := Driver{
-			TransicsID:   uint(transicsID),
+			TransicsID:   data.PersonTransicsID,
 			Name:         data.FormattedName,
 			Language:     data.Languages.WorkingLanguage,
 			Inactive:     data.Inactive,
