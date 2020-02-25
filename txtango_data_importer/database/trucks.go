@@ -60,7 +60,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 
 	//check and return error
 	if txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.CodeExplenation != "" {
-		return errors.New(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.CodeExplenation)
+		log.Printf("ERROR: %s\n", txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.CodeExplenation)
 	}
 
 	//check and print warning
@@ -102,6 +102,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 			// add truck
 			status = "Importing"
 			db.Create(&newTruck)
+			truck = newTruck
 		} else if truck.LastModified.Before(newTruck.LastModified) {
 			// update truck
 			status = "Updated"
@@ -112,15 +113,11 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		log.Printf("(%d / %d) %s truck %d\n", i+1, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), status, newTruck.TransicsID)
 
 		//start tour flow
-		go func() error {
-			err := checkTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.ETAStatus.Text, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude)
-			if err != nil {
-				// TODO add proper error handling
-				log.Print(err)
-			}
-
-			return nil
-		}()
+		err = checkTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.ETAStatus.Text, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude)
+		if err != nil {
+			// TODO add proper error handling
+			log.Print(err)
+		}
 
 		//add truck to group
 		addGroup(&newTruck, data.Groups.TxConnectGroups.ConnectGroups.ConnectGroup[0].SubGroup)

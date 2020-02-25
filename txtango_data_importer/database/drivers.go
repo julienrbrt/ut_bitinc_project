@@ -37,7 +37,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 
 	//check and return error
 	if txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.CodeExplenation != "" {
-		return errors.New(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.CodeExplenation)
+		log.Printf("ERROR: %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.CodeExplenation)
 	}
 
 	//check and print warning

@@ -167,8 +167,8 @@ func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, tourStatus str
 			db.Model(&tour).Where(oldTour).Update(Tour{EndTime: now})
 			newTour.StartTime = now
 		} else {
-			//set startTime first ever tour imported to yesterdat date
-			newTour.StartTime = time.Now().AddDate(0, 0, -1)
+			//set startTime first ever tour imported to yesterday date
+			newTour.StartTime = time.Now().AddDate(0, 0, -1).Truncate(24 * time.Hour)
 		}
 
 		// create tour
@@ -186,14 +186,13 @@ func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, tourStatus str
 	return nil
 }
 
-//ImportToursData import DriverEcoMonitorReport and TruckActivityReport for a certain tour
+//ImportToursData import DriverEcoMonitorReport and TruckActivityReport
 //Yet we import only yesterday data, so if the program quit for x days, x days of data will not be imported
 //It would nice to add a check for that in a future version
 func ImportToursData() error {
 	yesterday := time.Now().AddDate(0, 0, -1).Truncate(24 * time.Hour)
 
 	var trucks []Truck
-	//get truck list that were modified since yesterday
 	err := db.Where("last_modified > ?", yesterday).Find(&trucks).Error
 	if err != nil {
 		return errors.Wrap(err, errDatabaseConnection)
@@ -209,7 +208,7 @@ func ImportToursData() error {
 
 		//check and return error
 		if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.CodeExplenation != "" {
-			return errors.New(txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.CodeExplenation)
+			log.Printf("ERROR: %s\n", txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.CodeExplenation)
 		}
 
 		//check and print warning
@@ -219,6 +218,7 @@ func ImportToursData() error {
 
 		var tour Tour
 		//get matching tour
+		//TODO check end date too
 		err = db.Where("start_time >= ? AND truck_id = ?", yesterday, truck.ID).First(&tour).Error
 		if err != nil {
 			if err != gorm.ErrRecordNotFound {
@@ -262,9 +262,7 @@ func ImportToursData() error {
 
 			//add truck activty
 			log.Printf("Activity added for Truck %d\n", truck.TransicsID)
-			db.FirstOrCreate(&newTruckActivity)
-
-			//TODO while importing an activity it is possible that it is not finished, we need to check on the next import if a endTime is then set
+			db.Create(&newTruckActivity)
 		}
 	}
 
