@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fmt"
+	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -52,7 +52,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	//import data from transics
-	fmt.Println(loadingDataFromTransics)
+	log.Println(loadingDataFromTransics)
 	txVehicle, err := txtango.GetVehicle()
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 
 	//check and print warning
 	if txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning.CodeExplenation != "" {
-		fmt.Printf("WARNING: %s\n", txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning.CodeExplenation)
+		log.Printf("WARNING: %s\n", txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning.CodeExplenation)
 	}
 
 	for i, data := range txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13 {
@@ -80,7 +80,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		//parse modified date into time.Time if existing
 		modifiedDate, err := time.Parse("2006-01-02T15:04:05", data.Modified)
 		if err != nil {
-			fmt.Println(errParsingDate)
+			log.Println(errParsingDate)
 			modifiedDate = time.Time{}
 		}
 
@@ -109,15 +109,22 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		}
 
 		//add truck
-		fmt.Printf("(%d / %d) %s truck %d\n", i+1, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), status, newTruck.TransicsID)
+		log.Printf("(%d / %d) %s truck %d\n", i+1, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), status, newTruck.TransicsID)
 
 		//start tour flow
 		go func() error {
-			err = checkTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude, data.ETAInfo.ETAStatus.Text)
+			tour, err := checkTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude, data.ETAInfo.ETAStatus.Text)
 			if err != nil {
 				// TODO add proper error handling
-				panic(err)
+				log.Print(err)
 			}
+
+			err = importData(tour)
+			if err != nil {
+				// TODO add proper error handling
+				log.Print(err)
+			}
+
 			return nil
 		}()
 
@@ -155,7 +162,7 @@ func addGroup(truck *Truck, groupName string) {
 			return
 		}
 
-		fmt.Printf("Truck %d added to TruckGroup %s (now containing %d trucks)\n", truck.TransicsID, groupName, db.Model(&truckGroup).Association("Truck").Count())
+		log.Printf("Truck %d added to TruckGroup %s (now containing %d trucks)\n", truck.TransicsID, groupName, db.Model(&truckGroup).Association("Truck").Count())
 		db.Model(&truckGroup).Association("Truck").Append(truck)
 	}
 }

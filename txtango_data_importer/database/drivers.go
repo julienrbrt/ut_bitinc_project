@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fmt"
+	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -29,7 +29,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	//import data from transics
-	fmt.Println(loadingDataFromTransics)
+	log.Println(loadingDataFromTransics)
 	txDrivers, err := txtango.GetDrivers()
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 
 	//check and print warning
 	if txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.CodeExplenation != "" {
-		fmt.Printf("WARNING: %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.CodeExplenation)
+		log.Printf("WARNING: %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.CodeExplenation)
 	}
 
 	for i, data := range txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9 {
@@ -54,7 +54,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 		//parse modified date into time.Time if existing
 		modifiedDate, err := time.Parse("2006-01-02T15:04:05", data.UpdateDatesList.UpdateDatesItem.DateLastUpdate)
 		if err != nil {
-			fmt.Println(errParsingDate)
+			log.Println(errParsingDate)
 			modifiedDate = time.Time{}
 		}
 
@@ -83,7 +83,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 			db.Model(&driver).Where(Driver{TransicsID: newDriver.TransicsID}).Update(newDriver)
 		}
 
-		fmt.Printf("(%d / %d) %s driver %d\n", i+1, len(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9), status, newDriver.TransicsID)
+		log.Printf("(%d / %d) %s driver %d\n", i+1, len(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9), status, newDriver.TransicsID)
 	}
 
 	return nil
