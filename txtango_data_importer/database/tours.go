@@ -100,7 +100,7 @@ type DriverEcoMonitorReport struct {
 //checkTour handles tour import and creation flow
 func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, tourStatus string, long, lat float32) error {
 	// if transics id not set, then do not create tour
-	if driverTransicsID == "" || trailerTransicsID == "" {
+	if driverTransicsID == "" {
 		return nil
 	}
 
@@ -120,15 +120,17 @@ func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, tourStatus str
 
 	//get trailer
 	var trailer Trailer
-	transicsID, err = strconv.ParseUint(trailerTransicsID, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, errParsingTransicsID)
-	}
+	if trailerTransicsID != "" {
+		transicsID, err = strconv.ParseUint(trailerTransicsID, 10, 64)
+		if err != nil {
+			return errors.Wrap(err, errParsingTransicsID)
+		}
 
-	trailer.TransicsID = uint(transicsID)
-	if err := db.Where(&trailer).Find(&trailer).Error; err != nil {
-		if err != gorm.ErrRecordNotFound {
-			return errors.Wrap(err, errDatabaseConnection)
+		trailer.TransicsID = uint(transicsID)
+		if err := db.Where(&trailer).Find(&trailer).Error; err != nil {
+			if err != gorm.ErrRecordNotFound {
+				return errors.Wrap(err, errDatabaseConnection)
+			}
 		}
 	}
 
