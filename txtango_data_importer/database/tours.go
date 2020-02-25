@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -98,14 +99,56 @@ type DriverEcoMonitorReport struct {
 }
 
 //checkTour handles tour import and creation flow
-func checkTour(truck *Truck, driver *Driver, trailer *Trailer, tourStatus string, destinationLong, destinationLat float32) error {
+func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, long, lat, tourStatus string) error {
+	// if transics id not set, then do not create tour
+	if driverTransicsID == "" || trailerTransicsID == "" {
+		return nil
+	}
+
+	//get driver
+	var driver Driver
+	transicsID, err := strconv.ParseUint(driverTransicsID, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, errParsingTransicsID)
+	}
+
+	driver.TransicsID = uint(transicsID)
+	if err := db.Where(&driver).Find(&driver).Error; err != nil {
+		return err
+	}
+
+	//get trailer
+	var trailer Trailer
+	transicsID, err = strconv.ParseUint(trailerTransicsID, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, errParsingTransicsID)
+	}
+
+	trailer.TransicsID = uint(transicsID)
+	if err := db.Where(&trailer).Find(&trailer).Error; err != nil {
+		return err
+	}
+
+	//get destination coordinates
+	longitude, err := strconv.ParseFloat(long, 32)
+	if err != nil {
+		return errors.Wrap(err, errParsingCoordinates)
+	}
+
+	latitude, err := strconv.ParseFloat(lat, 32)
+	if err != nil {
+		return errors.Wrap(err, errParsingCoordinates)
+	}
+
+	//initialize tour
+	//keep in mind that if a driver keep doing the same tour with the same destination, his tour will never be finished.
 	var tour Tour
 	newTour := Tour{
 		TruckID:              truck.ID,
 		DriverID:             driver.ID,
 		TrailerID:            trailer.ID,
-		DestinationLongitude: destinationLong,
-		DestinationLatitude:  destinationLat,
+		DestinationLongitude: float32(longitude),
+		DestinationLatitude:  float32(latitude),
 	}
 
 	status := "Skipped"
@@ -114,26 +157,32 @@ func checkTour(truck *Truck, driver *Driver, trailer *Trailer, tourStatus string
 			return errors.Wrap(err, errDatabaseConnection)
 		}
 
+		//check how many tour has a truck
 		var count int
 		if err = db.Model(&tour).Where(Tour{TruckID: truck.ID}).Count(&count).Error; err != nil {
 			return errors.Wrap(err, errDatabaseConnection)
 		}
 
-		if count == 0 {
-			// fied date for the first run of the program with no tour associated to any truck
-			newTour.StartTime = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+		if count > 0 {
+			now := time.Now()
+			// Get old tour
+			var oldTour Tour
+			if err := db.Model(&tour).Where(Tour{TruckID: truck.ID}).Last(&oldTour).Error; err != nil {
+				return errors.Wrap(err, errDatabaseConnection)
+			}
+
+			// Start new tour and old tour using now date
+			db.Model(&tour).Where(oldTour).Update(Tour{EndTime: now})
+			newTour.StartTime = now
 		}
 
-		// add tour
+		// create tour
 		status = "Creating a new"
 		newTour.Status = tourStatus
 		db.Create(&newTour)
-	} else {
-		// update tour
+	} else if truck.LastModified.After(tour.UpdatedAt) { // update tour
 		status = "Updating"
-		newTourData := newTour
-		newTourData.Status = tourStatus
-		db.Model(&tour).Where(newTour).Update(newTourData)
+		db.Model(&tour).Where(newTour).Update(Tour{Status: tourStatus})
 	}
 
 	//add tour

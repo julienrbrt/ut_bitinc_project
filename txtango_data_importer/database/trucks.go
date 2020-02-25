@@ -111,46 +111,13 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		//add truck
 		fmt.Printf("(%d / %d) %s truck %d\n", i+1, len(txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13), status, newTruck.TransicsID)
 
-		// start tour import and creation flow
+		//start tour flow
 		go func() error {
-			//get driver
-			transicsID, err := strconv.ParseUint(data.Driver.TransicsID, 10, 64)
+			err = checkTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude, data.ETAInfo.ETAStatus.Text)
 			if err != nil {
-				return errors.Wrap(err, errParsingTransicsID)
+				// TODO add proper error handling
+				panic(err)
 			}
-
-			driver := Driver{TransicsID: uint(transicsID)}
-			if err := db.Model(&driver).Find(&driver).Error; err != nil {
-				return err
-			}
-
-			//get trailer
-			transicsID, err = strconv.ParseUint(data.Trailer.TransicsID, 10, 64)
-			if err != nil {
-				return errors.Wrap(err, errParsingTransicsID)
-			}
-
-			trailer := Trailer{TransicsID: uint(transicsID)}
-			if err := db.Model(&trailer).Find(&trailer).Error; err != nil {
-				return err
-			}
-
-			//get destination coordinates
-			longitude, err := strconv.ParseFloat(data.ETAInfo.PositionDestination.Longitude, 32)
-			if err != nil {
-				return errors.Wrap(err, errParsingCoordinates)
-			}
-
-			latitude, err := strconv.ParseFloat(data.ETAInfo.PositionDestination.Latitude, 32)
-			if err != nil {
-				return errors.Wrap(err, errParsingCoordinates)
-			}
-
-			err = checkTour(&truck, &driver, &trailer, data.ETAInfo.ETAStatus.Text, float32(longitude), float32(latitude))
-			if err != nil {
-				return err
-			}
-
 			return nil
 		}()
 
