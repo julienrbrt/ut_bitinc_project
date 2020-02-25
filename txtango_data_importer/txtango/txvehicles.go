@@ -134,9 +134,9 @@ type GetVehicleResponse struct {
 						ETAInfo struct {
 							Text                string `xml:",chardata"`
 							PositionDestination struct {
-								Text      string `xml:",chardata"`
-								Longitude string `xml:"Longitude"`
-								Latitude  string `xml:"Latitude"`
+								Text      string  `xml:",chardata"`
+								Longitude float32 `xml:"Longitude"`
+								Latitude  float32 `xml:"Latitude"`
 							} `xml:"PositionDestination"`
 							PrevETA struct {
 								Text string `xml:",chardata"`

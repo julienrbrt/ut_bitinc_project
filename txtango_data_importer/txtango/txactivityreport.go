@@ -18,7 +18,7 @@ var getActivityReportTemplate = `
                 <Vehicles>
                     <IdentifierVehicle>
                         <IdentifierVehicleType>TRANSICS_ID</IdentifierVehicleType>
-                        <Id>{.VehicleTransicsID}}</Id>
+                        <Id>{{.VehicleTransicsID}}</Id>
                     </IdentifierVehicle>
 				</Vehicles>
 			<DateTimeRangeSelection>
@@ -86,12 +86,12 @@ type GetActivityReportResponse struct {
 							LicensePlate  string `xml:"LicensePlate"`
 							FormattedName string `xml:"FormattedName"`
 						} `xml:"Trailer"`
-						BeginDate    string `xml:"BeginDate"`
-						EndDate      string `xml:"EndDate"`
-						KmBegin      string `xml:"KmBegin"`
-						KmEnd        string `xml:"KmEnd"`
-						Consumption  string `xml:"Consumption"`
-						LoadedStatus string `xml:"LoadedStatus"`
+						BeginDate    string  `xml:"BeginDate"`
+						EndDate      string  `xml:"EndDate"`
+						KmBegin      int     `xml:"KmBegin"`
+						KmEnd        int     `xml:"KmEnd"`
+						Consumption  float32 `xml:"Consumption"`
+						LoadedStatus string  `xml:"LoadedStatus"`
 						Activity     struct {
 							Text                  string `xml:",chardata"`
 							ID                    string `xml:"ID"`
@@ -100,18 +100,18 @@ type GetActivityReportResponse struct {
 							ActivityType          string `xml:"ActivityType"`
 							InstructionSetVersion string `xml:"InstructionSetVersion"`
 						} `xml:"Activity"`
-						SpeedAvg  string `xml:"SpeedAvg"`
-						Reference string `xml:"Reference"`
+						SpeedAvg  float32 `xml:"SpeedAvg"`
+						Reference string  `xml:"Reference"`
 						Position  struct {
-							Text                        string `xml:",chardata"`
-							Longitude                   string `xml:"Longitude"`
-							Latitude                    string `xml:"Latitude"`
-							AddressInfo                 string `xml:"AddressInfo"`
-							DistanceFromCapitol         string `xml:"DistanceFromCapitol"`
-							DistanceFromLargeCity       string `xml:"DistanceFromLargeCity"`
-							DistanceFromSmallCity       string `xml:"DistanceFromSmallCity"`
-							DistanceFromPointOfInterest string `xml:"DistanceFromPointOfInterest"`
-							CountryCode                 string `xml:"CountryCode"`
+							Text                        string  `xml:",chardata"`
+							Longitude                   float32 `xml:"Longitude"`
+							Latitude                    float32 `xml:"Latitude"`
+							AddressInfo                 string  `xml:"AddressInfo"`
+							DistanceFromCapitol         string  `xml:"DistanceFromCapitol"`
+							DistanceFromLargeCity       string  `xml:"DistanceFromLargeCity"`
+							DistanceFromSmallCity       string  `xml:"DistanceFromSmallCity"`
+							DistanceFromPointOfInterest string  `xml:"DistanceFromPointOfInterest"`
+							CountryCode                 string  `xml:"CountryCode"`
 						} `xml:"Position"`
 						ModificationDate string `xml:"ModificationDate"`
 						RegistrationID   string `xml:"RegistrationID"`
@@ -155,8 +155,8 @@ type GetActivityReportResponse struct {
 //the date argument is used to get the report of a specific date
 func GetActivityReport(vehicleTransicsID int, date time.Time) (*GetActivityReportResponse, error) {
 	startDate := date.Format("2006-01-02")
-	// add a day to find the enddate
-	endDate := date.Add(time.Hour * 24).Format("2006-01-02")
+	// add a day to find the end date
+	endDate := date.AddDate(0, 0, 1).Format("2006-01-02")
 
 	//make an authenticated request
 	params := &GetActivityReportRequest{
@@ -167,7 +167,7 @@ func GetActivityReport(vehicleTransicsID int, date time.Time) (*GetActivityRepor
 		EndDate:   endDate,
 	}
 
-	resp, err := soapCall(params, "GetActivityReport", getEcoReport)
+	resp, err := soapCall(params, "GetActivityReport", getActivityReportTemplate)
 	if err != nil {
 		return nil, err
 	}

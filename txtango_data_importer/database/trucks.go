@@ -113,13 +113,7 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 
 		//start tour flow
 		go func() error {
-			tour, err := checkTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude, data.ETAInfo.ETAStatus.Text)
-			if err != nil {
-				// TODO add proper error handling
-				log.Print(err)
-			}
-
-			err = importData(tour)
+			err := checkTour(&truck, data.Driver.TransicsID, data.Trailer.TransicsID, data.ETAInfo.ETAStatus.Text, data.ETAInfo.PositionDestination.Longitude, data.ETAInfo.PositionDestination.Latitude)
 			if err != nil {
 				// TODO add proper error handling
 				log.Print(err)

@@ -189,8 +189,8 @@ type GetEcoReportResponse struct {
 //the date argument is used to get the report of a specific date
 func GetEcoReport(driverTransicsID int, date time.Time) (*GetEcoReportResponse, error) {
 	startDate := date.Format("2006-01-02")
-	// add a day to find the enddate
-	endDate := date.Add(time.Hour * 24).Format("2006-01-02")
+	// add a day to find the end date
+	endDate := date.AddDate(0, 0, 1).Format("2006-01-02")
 
 	//make an authenticated request
 	params := &GetEcoReportRequest{

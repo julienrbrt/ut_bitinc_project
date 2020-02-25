@@ -18,15 +18,20 @@ var importCmd = &cobra.Command{
 
 		wg.Add(1)
 		go func() {
-			err = database.ImportTrucks(&wg)
+			err = database.ImportDrivers(&wg)
 		}()
 
 		wg.Add(1)
 		go func() {
-			err = database.ImportDrivers(&wg)
+			err = database.ImportTrucks(&wg)
 		}()
 
 		wg.Wait()
+		if err != nil {
+			return err
+		}
+
+		err = database.ImportToursData()
 		if err != nil {
 			return err
 		}

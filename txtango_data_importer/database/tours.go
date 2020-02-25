@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	"time"
+	"tx2db/txtango"
 
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -31,13 +32,12 @@ type TruckActivityReport struct {
 	gorm.Model
 	TruckID      uint
 	TourID       uint
-	TransicsID   uint
 	KmBegin      int
 	KmEnd        int
 	Consumption  float32
 	LoadedStatus string
 	Activity     string
-	SpeedAvg     int
+	SpeedAvg     float32
 	Longitude    float32
 	Latitude     float32
 	AddressInfo  string
@@ -53,7 +53,6 @@ type DriverEcoMonitorReport struct {
 	gorm.Model
 	DriverID                                           uint
 	TourID                                             uint
-	TransicsID                                         int
 	Distance                                           float32
 	DurationDriving                                    float32
 	FuelConsumption                                    float32
@@ -99,23 +98,23 @@ type DriverEcoMonitorReport struct {
 }
 
 //checkTour handles tour import and creation flow
-func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, long, lat, tourStatus string) (Tour, error) {
+func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, tourStatus string, long, lat float32) error {
 	// if transics id not set, then do not create tour
 	if driverTransicsID == "" || trailerTransicsID == "" {
-		return Tour{}, nil
+		return nil
 	}
 
 	//get driver
 	var driver Driver
 	transicsID, err := strconv.ParseUint(driverTransicsID, 10, 64)
 	if err != nil {
-		return Tour{}, errors.Wrap(err, errParsingTransicsID)
+		return errors.Wrap(err, errParsingTransicsID)
 	}
 
 	driver.TransicsID = uint(transicsID)
 	if err := db.Where(&driver).Find(&driver).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return Tour{}, err
+			return errors.Wrap(err, errDatabaseConnection)
 		}
 	}
 
@@ -123,25 +122,14 @@ func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, long, lat, tou
 	var trailer Trailer
 	transicsID, err = strconv.ParseUint(trailerTransicsID, 10, 64)
 	if err != nil {
-		return Tour{}, errors.Wrap(err, errParsingTransicsID)
+		return errors.Wrap(err, errParsingTransicsID)
 	}
 
 	trailer.TransicsID = uint(transicsID)
 	if err := db.Where(&trailer).Find(&trailer).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return Tour{}, err
+			return errors.Wrap(err, errDatabaseConnection)
 		}
-	}
-
-	//get destination coordinates
-	longitude, err := strconv.ParseFloat(long, 32)
-	if err != nil {
-		return Tour{}, errors.Wrap(err, errParsingCoordinates)
-	}
-
-	latitude, err := strconv.ParseFloat(lat, 32)
-	if err != nil {
-		return Tour{}, errors.Wrap(err, errParsingCoordinates)
 	}
 
 	//initialize tour
@@ -151,20 +139,20 @@ func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, long, lat, tou
 		TruckID:              truck.ID,
 		DriverID:             driver.ID,
 		TrailerID:            trailer.ID,
-		DestinationLongitude: float32(longitude),
-		DestinationLatitude:  float32(latitude),
+		DestinationLongitude: long,
+		DestinationLatitude:  lat,
 	}
 
 	status := "Skipped"
 	if err := db.Where(newTour).First(&tour).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return Tour{}, errors.Wrap(err, errDatabaseConnection)
+			return errors.Wrap(err, errDatabaseConnection)
 		}
 
 		//check how many tour has a truck
 		var count int
 		if err = db.Model(&tour).Where(Tour{TruckID: truck.ID}).Count(&count).Error; err != nil {
-			return Tour{}, errors.Wrap(err, errDatabaseConnection)
+			return errors.Wrap(err, errDatabaseConnection)
 		}
 
 		if count > 0 {
@@ -172,12 +160,15 @@ func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, long, lat, tou
 			// Get old tour
 			var oldTour Tour
 			if err := db.Model(&tour).Where(Tour{TruckID: truck.ID}).Last(&oldTour).Error; err != nil {
-				return Tour{}, errors.Wrap(err, errDatabaseConnection)
+				return errors.Wrap(err, errDatabaseConnection)
 			}
 
 			// Start new tour and old tour using now date
 			db.Model(&tour).Where(oldTour).Update(Tour{EndTime: now})
 			newTour.StartTime = now
+		} else {
+			//set startTime first ever tour imported to yesterdat date
+			newTour.StartTime = time.Now().AddDate(0, 0, -1)
 		}
 
 		// create tour
@@ -192,10 +183,90 @@ func checkTour(truck *Truck, driverTransicsID, trailerTransicsID, long, lat, tou
 	//add tour
 	log.Printf("%s tour of driver %s in truck %d\n", status, driverTransicsID, truck.TransicsID)
 
-	return newTour, nil
+	return nil
 }
 
-//importData import DriverEcoMonitorReport and TruckActivityReport for a certain tour
-func importData(tour Tour) error {
+//ImportToursData import DriverEcoMonitorReport and TruckActivityReport for a certain tour
+//Yet we import only yesterday data, so if the program quit for x days, x days of data will not be imported
+//It would nice to add a check for that in a future version
+func ImportToursData() error {
+	yesterday := time.Now().AddDate(0, 0, -1).Truncate(24 * time.Hour)
+
+	var trucks []Truck
+	//get truck list that were modified since yesterday
+	err := db.Where("last_modified > ?", yesterday).Find(&trucks).Error
+	if err != nil {
+		return errors.Wrap(err, errDatabaseConnection)
+	}
+
+	for i, truck := range trucks {
+		//import data from transics
+		log.Printf("(%d / %d) %s\n", i+1, len(trucks), loadingDataFromTransics)
+		txTruckActivity, err := txtango.GetActivityReport(int(truck.TransicsID), yesterday)
+		if err != nil {
+			return err
+		}
+
+		//check and return error
+		if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.CodeExplenation != "" {
+			return errors.New(txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.CodeExplenation)
+		}
+
+		//check and print warning
+		if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning.CodeExplenation != "" {
+			log.Printf("WARNING: %s\n", txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning.CodeExplenation)
+		}
+
+		var tour Tour
+		//get matching tour
+		err = db.Where("start_time >= ? AND truck_id = ?", yesterday, truck.ID).First(&tour).Error
+		if err != nil {
+			if err != gorm.ErrRecordNotFound {
+				return errors.Wrap(err, errDatabaseConnection)
+			}
+			log.Printf("No tour has been found for truck %d. Skip.", truck.TransicsID)
+			continue
+		}
+
+		for _, data := range txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.ActivityReportItems.ActivityReportItemV11 {
+			//parse begin and end date into time.Time
+			startTime, err := time.Parse("2006-01-02T15:04:05", data.BeginDate)
+			if err != nil {
+				log.Println(errParsingDate)
+				startTime = time.Time{}
+			}
+
+			endTime, err := time.Parse("2006-01-02T15:04:05", data.EndDate)
+			if err != nil {
+				log.Println(errParsingDate)
+				endTime = time.Time{}
+			}
+
+			newTruckActivity := TruckActivityReport{
+				TourID:       tour.ID,
+				TruckID:      tour.TruckID,
+				KmBegin:      data.KmBegin,
+				KmEnd:        data.KmEnd,
+				Consumption:  data.Consumption,
+				LoadedStatus: data.LoadedStatus,
+				Activity:     data.Activity.Name,
+				SpeedAvg:     data.SpeedAvg,
+				Longitude:    data.Position.Longitude,
+				Latitude:     data.Position.Latitude,
+				AddressInfo:  data.Position.AddressInfo,
+				CountryCode:  data.Position.CountryCode,
+				Reference:    data.Reference,
+				StartTime:    startTime,
+				EndTime:      endTime,
+			}
+
+			//add truck activty
+			log.Printf("Activity added for Truck %d\n", truck.TransicsID)
+			db.FirstOrCreate(&newTruckActivity)
+
+			//TODO while importing an activity it is possible that it is not finished, we need to check on the next import if a endTime is then set
+		}
+	}
+
 	return nil
 }
