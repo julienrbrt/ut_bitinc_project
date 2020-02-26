@@ -36,12 +36,12 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 
 	//check and return error
 	if txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error != (txtango.TXError{}).Error {
-		log.Printf("ERROR: %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.Value)
+		log.Printf("ERROR: %s - %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.Code, txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.Value)
 	}
 
 	//check and print warning
 	if txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning != (txtango.TXWarning{}).Warning {
-		log.Printf("WARNING: %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.Value)
+		log.Printf("WARNING: %s - %s\n", txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Errors.Error.Code, txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Warnings.Warning.Value)
 	}
 
 	for i, data := range txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9 {
