@@ -139,8 +139,8 @@ func buildTour(truck *Truck, driverTransicsID, trailerTransicsID uint, tourStatu
 			db.Model(&tour).Where(oldTour).Update(Tour{EndTime: now})
 			newTour.StartTime = now
 		} else {
-			//set startTime first ever tour imported to yesterday date
-			newTour.StartTime = now.AddDate(0, 0, -1).Truncate(24 * time.Hour)
+			//set startTime first ever tour imported to 1 January 2020 date
+			newTour.StartTime = time.Date(2020, 01, 01, 0, 0, 0, 0, time.UTC)
 		}
 
 		// create tour
