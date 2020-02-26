@@ -58,13 +58,13 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 	}
 
 	//check and return error
-	if txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.CodeExplenation != "" {
-		log.Printf("ERROR: %s\n", txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.CodeExplenation)
+	if txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error != (txtango.TXError{}).Error {
+		log.Printf("ERROR: %s\n", txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Errors.Error.Value)
 	}
 
 	//check and print warning
-	if txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning.CodeExplenation != "" {
-		log.Printf("WARNING: %s\n", txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning.CodeExplenation)
+	if txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning != (txtango.TXWarning{}).Warning {
+		log.Printf("WARNING: %s\n", txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Warnings.Warning.Value)
 	}
 
 	for i, data := range txVehicle.Body.GetVehiclesV13Response.GetVehiclesV13Result.Vehicles.InterfaceVehicleResultV13 {

@@ -86,41 +86,41 @@ type GetEcoReportResponse struct {
 						BeginDate  string `xml:"BeginDate"`
 						EndDate    string `xml:"EndDate"`
 						DataResult struct {
-							Text                   string `xml:",chardata"`
-							Distance               string `xml:"Distance"`
-							Duration               string `xml:"Duration"`
-							DurationDriving        string `xml:"DurationDriving"`
-							FuelConsumption        string `xml:"FuelConsumption"`
+							Text                   string  `xml:",chardata"`
+							Distance               float32 `xml:"Distance"`
+							Duration               float32 `xml:"Duration"`
+							DurationDriving        float32 `xml:"DurationDriving"`
+							FuelConsumption        float32 `xml:"FuelConsumption"`
 							FuelConsumptionAverage struct {
-								Text string `xml:",chardata"`
-								Nil  string `xml:"nil,attr"`
+								Text float32 `xml:",chardata"`
+								Nil  string  `xml:"nil,attr"`
 							} `xml:"FuelConsumptionAverage"`
-							RpmAverage         string `xml:"RpmAverage"`
+							RpmAverage         float32 `xml:"RpmAverage"`
 							Co2EmissionAverage struct {
-								Text string `xml:",chardata"`
-								Nil  string `xml:"nil,attr"`
+								Text float32 `xml:",chardata"`
+								Nil  string  `xml:"nil,attr"`
 							} `xml:"Co2EmissionAverage"`
-							SpeedAverage string `xml:"SpeedAverage"`
+							SpeedAverage float32 `xml:"SpeedAverage"`
 						} `xml:"DataResult"`
 						IdlingResult struct {
-							Text                     string `xml:",chardata"`
-							NumberOfLongIdling       string `xml:"NumberOfLongIdling"`
-							FuelConsumptionIdling    string `xml:"FuelConsumptionIdling"`
-							DurationIdling           string `xml:"DurationIdling"`
+							Text                     string  `xml:",chardata"`
+							NumberOfLongIdling       int     `xml:"NumberOfLongIdling"`
+							FuelConsumptionIdling    float32 `xml:"FuelConsumptionIdling"`
+							DurationIdling           float32 `xml:"DurationIdling"`
 							DurationIdlingPercentage struct {
 								Text string `xml:",chardata"`
 								Nil  string `xml:"nil,attr"`
 							} `xml:"DurationIdlingPercentage"`
 						} `xml:"IdlingResult"`
 						OverSpeedingResult struct {
-							Text                 string `xml:",chardata"`
-							DurationOverSpeeding string `xml:"DurationOverSpeeding"`
-							NumberOfOverSpeeding string `xml:"NumberOfOverSpeeding"`
+							Text                 string  `xml:",chardata"`
+							DurationOverSpeeding float32 `xml:"DurationOverSpeeding"`
+							NumberOfOverSpeeding int     `xml:"NumberOfOverSpeeding"`
 						} `xml:"OverSpeedingResult"`
 						CoastingResult struct {
-							Text                string `xml:",chardata"`
-							DistanceCoasting    string `xml:"DistanceCoasting"`
-							DurationCoasting    string `xml:"DurationCoasting"`
+							Text                string  `xml:",chardata"`
+							DistanceCoasting    float32 `xml:"DistanceCoasting"`
+							DurationCoasting    float32 `xml:"DurationCoasting"`
 							DistanceEcoRollInKm struct {
 								Text string `xml:",chardata"`
 								Nil  string `xml:"nil,attr"`
@@ -135,48 +135,48 @@ type GetEcoReportResponse struct {
 							} `xml:"DistanceEcoRollInPercentage"`
 						} `xml:"CoastingResult"`
 						AnticipationResult struct {
-							Text                       string `xml:",chardata"`
-							NumberOfStops              string `xml:"NumberOfStops"`
-							NumberOfBrakes             string `xml:"NumberOfBrakes"`
-							NumberOfPanicBrakes        string `xml:"NumberOfPanicBrakes"`
-							DistanceByBrakes           string `xml:"DistanceByBrakes"`
-							DurationByBrakes           string `xml:"DurationByBrakes"`
-							DurationByRetarder         string `xml:"DurationByRetarder"`
-							DurationHighRPMnoFuel      string `xml:"DurationHighRPMnoFuel"`
-							DurationHighRPM            string `xml:"DurationHighRPM"`
-							DistanceByRetarder         string `xml:"DistanceByRetarder"`
-							DistanceHighRPMnoFuel      string `xml:"DistanceHighRPMnoFuel"`
-							NumberOfHarshAccelerations string `xml:"NumberOfHarshAccelerations"`
-							DurationHarshAcceleration  string `xml:"DurationHarshAcceleration"`
+							Text                       string  `xml:",chardata"`
+							NumberOfStops              int     `xml:"NumberOfStops"`
+							NumberOfBrakes             int     `xml:"NumberOfBrakes"`
+							NumberOfPanicBrakes        int     `xml:"NumberOfPanicBrakes"`
+							DistanceByBrakes           float32 `xml:"DistanceByBrakes"`
+							DurationByBrakes           float32 `xml:"DurationByBrakes"`
+							DurationByRetarder         float32 `xml:"DurationByRetarder"`
+							DurationHighRPMnoFuel      float32 `xml:"DurationHighRPMnoFuel"`
+							DurationHighRPM            float32 `xml:"DurationHighRPM"`
+							DistanceByRetarder         float32 `xml:"DistanceByRetarder"`
+							DistanceHighRPMnoFuel      float32 `xml:"DistanceHighRPMnoFuel"`
+							NumberOfHarshAccelerations int     `xml:"NumberOfHarshAccelerations"`
+							DurationHarshAcceleration  float32 `xml:"DurationHarshAcceleration"`
 						} `xml:"AnticipationResult"`
 						GreenSpotResult struct {
-							Text                     string `xml:",chardata"`
-							DistanceGreenSpot        string `xml:"DistanceGreenSpot"`
-							DurationGreenSpot        string `xml:"DurationGreenSpot"`
-							FuelConsumptionGreenSpot string `xml:"FuelConsumptionGreenSpot"`
+							Text                     string  `xml:",chardata"`
+							DistanceGreenSpot        float32 `xml:"DistanceGreenSpot"`
+							DurationGreenSpot        float32 `xml:"DurationGreenSpot"`
+							FuelConsumptionGreenSpot float32 `xml:"FuelConsumptionGreenSpot"`
 						} `xml:"GreenSpotResult"`
 						GearingResult struct {
-							Text                      string `xml:",chardata"`
-							NumberOfGearChanges       string `xml:"NumberOfGearChanges"`
-							NumberOfGearChangesUp     string `xml:"NumberOfGearChangesUp"`
-							PositionOfThrottleAverage string `xml:"PositionOfThrottleAverage"`
-							PositionOfThrottleMaximum string `xml:"PositionOfThrottleMaximum"`
+							Text                      string  `xml:",chardata"`
+							NumberOfGearChanges       int     `xml:"NumberOfGearChanges"`
+							NumberOfGearChangesUp     int     `xml:"NumberOfGearChangesUp"`
+							PositionOfThrottleAverage float32 `xml:"PositionOfThrottleAverage"`
+							PositionOfThrottleMaximum float32 `xml:"PositionOfThrottleMaximum"`
 						} `xml:"GearingResult"`
 						PtoResult struct {
-							Text                         string `xml:",chardata"`
-							NumberOfPto                  string `xml:"NumberOfPto"`
-							FuelConsumptionPtoDriving    string `xml:"FuelConsumptionPtoDriving"`
-							FuelConsumptionPtoStandStill string `xml:"FuelConsumptionPtoStandStill"`
-							DurationPtoDriving           string `xml:"DurationPtoDriving"`
-							DurationPtoStandStill        string `xml:"DurationPtoStandStill"`
+							Text                         string  `xml:",chardata"`
+							NumberOfPto                  int     `xml:"NumberOfPto"`
+							FuelConsumptionPtoDriving    float32 `xml:"FuelConsumptionPtoDriving"`
+							FuelConsumptionPtoStandStill float32 `xml:"FuelConsumptionPtoStandStill"`
+							DurationPtoDriving           float32 `xml:"DurationPtoDriving"`
+							DurationPtoStandStill        float32 `xml:"DurationPtoStandStill"`
 						} `xml:"PtoResult"`
 						CruisingResult struct {
-							Text                                           string `xml:",chardata"`
-							DistanceOnCruiseControl                        string `xml:"DistanceOnCruiseControl"`
-							DurationOnCruiseControl                        string `xml:"DurationOnCruiseControl"`
-							DistanceOnCruiseControlPercentage              string `xml:"DistanceOnCruiseControlPercentage"`
-							AvgFuelConsumptionCruiseControlInLiterPer100km string `xml:"AvgFuelConsumptionCruiseControlInLiterPer100km"`
-							AvgFuelConsumptionCruiseControlInkmPerLiter    string `xml:"AvgFuelConsumptionCruiseControlInkmPerLiter"`
+							Text                                           string  `xml:",chardata"`
+							DistanceOnCruiseControl                        float32 `xml:"DistanceOnCruiseControl"`
+							DurationOnCruiseControl                        float32 `xml:"DurationOnCruiseControl"`
+							DistanceOnCruiseControlPercentage              float32 `xml:"DistanceOnCruiseControlPercentage"`
+							AvgFuelConsumptionCruiseControlInLiterPer100km float32 `xml:"AvgFuelConsumptionCruiseControlInLiterPer100km"`
+							AvgFuelConsumptionCruiseControlInkmPerLiter    float32 `xml:"AvgFuelConsumptionCruiseControlInkmPerLiter"`
 						} `xml:"CruisingResult"`
 					} `xml:"EcoMonitorReportItem_V3"`
 				} `xml:"EcoMonitorReportItems"`

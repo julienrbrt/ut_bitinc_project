@@ -22,12 +22,5 @@ func main() {
 	}
 	defer database.DB().Close()
 
-	//connect to redis
-	err = database.InitRedis()
-	if err != nil {
-		panic(err)
-	}
-	defer database.RDB().Close()
-
 	cmd.Execute()
 }

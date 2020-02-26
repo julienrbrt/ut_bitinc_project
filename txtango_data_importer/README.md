@@ -9,7 +9,6 @@ The efficient way to import periodically data is to use **CRON**.
 
 * Go
 * SQL Server
-* Redis
 
 ## Configuration
 

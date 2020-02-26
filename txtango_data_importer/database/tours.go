@@ -75,7 +75,7 @@ type DriverEcoMonitorReport struct {
 	DurationByRetarder                                 float32
 	DurationHighRPMnoFuel                              float32
 	DurationHighRPM                                    float32
-	NumberOfHarshAccelerations                         float32
+	NumberOfHarshAccelerations                         int
 	DurationHarshAcceleration                          float32
 	DistanceGreenSpot                                  float32
 	DurationGreenSpot                                  float32
@@ -158,85 +158,196 @@ func buildTour(truck *Truck, driverTransicsID, trailerTransicsID uint, tourStatu
 	return nil
 }
 
-//ImportActivityReport import TruckActivityReport
-func ImportActivityReport() error {
-	now := time.Now()
+//ImportToursData import TruckActivityReport and DriverEcoMonitorReport
+func ImportToursData() error {
+	log.Println("Importing tours data")
 
+	now := time.Now()
 	var tours []Tour
 	//getting the lastest tours which has been end in the past 3 dats
-	err := db.Where("last_import IS NULL AND (end_time > ? OR end_time IS NULL)", now.AddDate(0, 0, -3)).Find(&tours).Error
+	err := db.Where("last_import IS NULL OR end_time IS NULL OR end_time > last_import").Find(&tours).Error
 	if err != nil {
 		return errors.Wrap(err, errDatabaseConnection)
 	}
 
 	for i, tour := range tours {
+		log.Printf("(%d / %d) %s\n", i+1, len(tours), loadingDataFromTransics)
+
 		// caculate elapsed time betfore last import and queries missing days
 		if (tour.LastImport == time.Time{}) {
 			//if never has been imported, only import the previous day
 			tour.LastImport = now.AddDate(0, 0, -1).Truncate(24 * time.Hour)
 		}
-		diff := int(now.Sub(tour.LastImport).Hours() / 24)
 
-		for day := 0; day < diff; day++ {
-			//import data from transics
-			log.Printf("(%d / %d) %s\n", i+1, len(tours), loadingDataFromTransics)
-			txTruckActivity, err := txtango.GetActivityReport(tour.TruckTransicsID, tour.LastImport.AddDate(0, 0, day))
+		//import activity report
+		err = importActivityReport(&tour, now)
+		if err != nil {
+			log.Printf("ERROR: %s\n", err)
+			return err
+		}
+
+		//import eco monitor report
+		err = importEcoMoniorReport(&tour)
+		if err != nil {
+			log.Printf("ERROR: %s\n", err)
+			return err
+
+		}
+	}
+	return nil
+}
+
+//importActivityReport import the activity report of truck given a toru
+func importActivityReport(tour *Tour, now time.Time) error {
+	diff := int(now.Sub(tour.LastImport).Hours() / 24)
+
+	for day := 0; day <= diff; day++ {
+		//import data from transics
+		txTruckActivity, err := txtango.GetActivityReport(tour.TruckTransicsID, tour.LastImport.AddDate(0, 0, day))
+		if err != nil {
+			return err
+		}
+
+		//check and return error
+		if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error != (txtango.TXError{}).Error {
+			log.Printf("ERROR: %s\n", txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.Value)
+		}
+
+		//check and print warning
+		if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning != (txtango.TXWarning{}).Warning {
+			log.Printf("WARNING: %s\n", txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning.Value)
+		}
+
+		for _, data := range txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.ActivityReportItems.ActivityReportItemV11 {
+			//parse begin and end date into time.Time
+			startTime, err := time.Parse("2006-01-02T15:04:05", data.BeginDate)
 			if err != nil {
-				return err
+				log.Println(errParsingDate)
+				startTime = time.Time{}
 			}
 
-			//check and return error
-			if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.CodeExplenation != "" {
-				log.Printf("ERROR: %s\n", txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.CodeExplenation)
+			endTime, err := time.Parse("2006-01-02T15:04:05", data.EndDate)
+			if err != nil {
+				log.Println(errParsingDate)
+				endTime = time.Time{}
 			}
 
-			//check and print warning
-			if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning.CodeExplenation != "" {
-				log.Printf("WARNING: %s\n", txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning.CodeExplenation)
-			}
-
-			for _, data := range txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.ActivityReportItems.ActivityReportItemV11 {
-				//parse begin and end date into time.Time
-				startTime, err := time.Parse("2006-01-02T15:04:05", data.BeginDate)
-				if err != nil {
-					log.Println(errParsingDate)
-					startTime = time.Time{}
+			//check if date is contained in tour date boundaries
+			if tour.StartTime.Before(startTime) && (tour.EndTime.After(endTime) || tour.EndTime == time.Time{}) {
+				newTruckActivity := TruckActivityReport{
+					TourID:          tour.ID,
+					TruckTransicsID: tour.TruckTransicsID,
+					KmBegin:         data.KmBegin,
+					KmEnd:           data.KmEnd,
+					Consumption:     data.Consumption,
+					LoadedStatus:    data.LoadedStatus,
+					Activity:        data.Activity.Name,
+					SpeedAvg:        data.SpeedAvg,
+					Longitude:       data.Position.Longitude,
+					Latitude:        data.Position.Latitude,
+					AddressInfo:     data.Position.AddressInfo,
+					CountryCode:     data.Position.CountryCode,
+					Reference:       data.Reference,
+					StartTime:       startTime,
+					EndTime:         endTime,
 				}
 
-				endTime, err := time.Parse("2006-01-02T15:04:05", data.EndDate)
-				if err != nil {
-					log.Println(errParsingDate)
-					endTime = time.Time{}
-				}
+				//add truck activty
+				log.Printf("Activity added for Truck %d\n", tour.TruckTransicsID)
+				db.Create(&newTruckActivity)
 
-				//check if date is contained in tour date boundaries
-				if tour.StartTime.Before(startTime) && (tour.EndTime.After(endTime) || tour.EndTime == time.Time{}) {
-					newTruckActivity := TruckActivityReport{
-						TourID:          tour.ID,
-						TruckTransicsID: tour.TruckTransicsID,
-						KmBegin:         data.KmBegin,
-						KmEnd:           data.KmEnd,
-						Consumption:     data.Consumption,
-						LoadedStatus:    data.LoadedStatus,
-						Activity:        data.Activity.Name,
-						SpeedAvg:        data.SpeedAvg,
-						Longitude:       data.Position.Longitude,
-						Latitude:        data.Position.Latitude,
-						AddressInfo:     data.Position.AddressInfo,
-						CountryCode:     data.Position.CountryCode,
-						Reference:       data.Reference,
-						StartTime:       startTime,
-						EndTime:         endTime,
-					}
-
-					//add truck activty
-					log.Printf("Activity added for Truck %d\n", tour.TruckTransicsID)
-					db.Create(&newTruckActivity)
-
-					//update last import of tour
-					db.Model(&tour).Where("id = ?", tour.ID).Update(Tour{LastImport: now})
-				}
+				//update last import of tour
+				db.Model(&tour).Where("id = ?", tour.ID).Update(Tour{LastImport: now})
 			}
+		}
+	}
+
+	return nil
+}
+
+func importEcoMoniorReport(tour *Tour) error {
+	//import data from transics
+	txDriverEcoMonitor, err := txtango.GetEcoReport(tour.DriverTransicsID, tour.StartTime)
+	if err != nil {
+		return err
+	}
+
+	//check and return error
+	if txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Errors.Error != (txtango.TXError{}).Error {
+		log.Printf("ERROR: %s\n", txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Errors.Error.Value)
+	}
+
+	//check and print warning
+	if txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Warnings.Warning != (txtango.TXWarning{}).Warning {
+		log.Printf("WARNING: %s\n", txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Warnings.Warning.Value)
+	}
+
+	for _, data := range txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.EcoMonitorReportItems.EcoMonitorReportItemV3 {
+		//parse begin and end date into time.Time
+		startTime, err := time.Parse("2006-01-02T15:04:05", data.BeginDate)
+		if err != nil {
+			log.Println(errParsingDate)
+			startTime = time.Time{}
+		}
+
+		endTime, err := time.Parse("2006-01-02T15:04:05", data.EndDate)
+		if err != nil {
+			log.Println(errParsingDate)
+			endTime = time.Time{}
+		}
+
+		//check if date is contained in tour date boundaries
+		if tour.StartTime.Before(startTime) && (tour.EndTime.After(endTime) || tour.EndTime == time.Time{}) {
+			newEcoMonitor := DriverEcoMonitorReport{
+				TourID:                       tour.ID,
+				DriverTransicsID:             tour.DriverTransicsID,
+				Distance:                     data.DataResult.Distance,
+				DurationDriving:              data.DataResult.Duration,
+				FuelConsumption:              data.DataResult.FuelConsumption,
+				FuelConsumptionAverage:       data.DataResult.FuelConsumptionAverage.Text,
+				RpmAverage:                   data.DataResult.RpmAverage,
+				EmissionAverage:              data.DataResult.Co2EmissionAverage.Text,
+				SpeedAverage:                 data.DataResult.SpeedAverage,
+				FuelConsumptionIdling:        data.IdlingResult.FuelConsumptionIdling,
+				DurationIdling:               data.IdlingResult.DurationIdling,
+				NumberIdling:                 data.IdlingResult.NumberOfLongIdling,
+				DurationOverSpeeding:         data.OverSpeedingResult.DurationOverSpeeding,
+				NumberOverSpeeding:           data.OverSpeedingResult.NumberOfOverSpeeding,
+				DistanceCoasting:             data.CoastingResult.DistanceCoasting,
+				DurationCoasting:             data.CoastingResult.DurationCoasting,
+				NumberOfStops:                data.AnticipationResult.NumberOfStops,
+				NumberOfBrakes:               data.AnticipationResult.NumberOfBrakes,
+				NumberOfPanicBrakes:          data.AnticipationResult.NumberOfPanicBrakes,
+				DistanceByBrakes:             data.AnticipationResult.DistanceByBrakes,
+				DurationByBrakes:             data.AnticipationResult.DurationByBrakes,
+				DurationByRetarder:           data.AnticipationResult.DurationByRetarder,
+				DurationHighRPMnoFuel:        data.AnticipationResult.DurationHighRPMnoFuel,
+				DurationHighRPM:              data.AnticipationResult.DurationHighRPM,
+				NumberOfHarshAccelerations:   data.AnticipationResult.NumberOfHarshAccelerations,
+				DurationHarshAcceleration:    data.AnticipationResult.DurationHarshAcceleration,
+				DistanceGreenSpot:            data.GreenSpotResult.DistanceGreenSpot,
+				DurationGreenSpot:            data.GreenSpotResult.DurationGreenSpot,
+				FuelConsumptionGreenSpot:     data.GreenSpotResult.FuelConsumptionGreenSpot,
+				NumberOfGearChanges:          data.GearingResult.NumberOfGearChanges,
+				NumberOfGearChangesUp:        data.GearingResult.NumberOfGearChangesUp,
+				PositionOfThrottleAverage:    data.GearingResult.PositionOfThrottleAverage,
+				PositionOfThrottleMaximum:    data.GearingResult.PositionOfThrottleMaximum,
+				NumberOfPto:                  data.PtoResult.NumberOfPto,
+				FuelConsumptionPtoDriving:    data.PtoResult.FuelConsumptionPtoDriving,
+				FuelConsumptionPtoStandStill: data.PtoResult.FuelConsumptionPtoStandStill,
+				DurationPtoDriving:           data.PtoResult.DurationPtoDriving,
+				DurationPtoStandStill:        data.PtoResult.DurationPtoStandStill,
+				DistanceOnCruiseControl:      data.CruisingResult.DistanceOnCruiseControl,
+				DurationOnCruiseControl:      data.CruisingResult.DurationOnCruiseControl,
+				AvgFuelConsumptionCruiseControlInLiterPerHundredKm: data.CruisingResult.AvgFuelConsumptionCruiseControlInLiterPer100km,
+				AvgFuelConsumptionCruiseControlInkmPerLiter:        data.CruisingResult.AvgFuelConsumptionCruiseControlInkmPerLiter,
+				StartTime: startTime,
+				EndTime:   endTime,
+			}
+
+			//add eco monitor for driver
+			log.Printf("EcoMonitor Report added for driver %d\n", tour.DriverTransicsID)
+			db.Create(&newEcoMonitor)
 		}
 	}
 

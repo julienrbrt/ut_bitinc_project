@@ -26,12 +26,13 @@ var importCmd = &cobra.Command{
 			err = database.ImportTrucks(&wg)
 		}()
 
-		wg.Wait()
+		//handle only one error
 		if err != nil {
 			return err
 		}
+		wg.Wait()
 
-		err = database.ImportActivityReport()
+		err = database.ImportToursData()
 		if err != nil {
 			return err
 		}
