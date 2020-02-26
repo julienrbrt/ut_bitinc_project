@@ -1,11 +1,46 @@
 # BIT Inc. 2020 - Bolk Assignment
 
-This repository consists of 2 projects:
+## TX-TANGO Data Importer & Analysis
 
-- [txtango_data_importer](txtango_data_importer/)
-- [better_driver](better_driver/)
+The program will import data from Transics directly into the database.
+It will checks what fields are already present in the database before importing.
 
-**txtango_data_importer** imports the data from Transics TX-TANGO into a Bolk internal database  
-**better_driver** runs the different checks on the data from Bolk internal database, alert drivers and generate reports
+The program can also generate report from the data for a specific driver and truck for a given period of time.
 
-More information can be found in the `README.md` of respective projects.
+### Requirements
+
+* Go
+* SQL Server
+
+### Configuration
+
+#### .env
+
+The credentials of used services must be filled in the `.env` file. You can find an example of what information to fill-in in [.env.example](.env.example).
+
+#### MSSQL
+
+It is necessary to set a default schema in the database prior to use the program so as following:
+
+```sql
+ALTER USER [DATABASE_USER_NAME] WITH DEFAULT_SCHEMA=[dbo]
+GO
+
+```
+
+### Usage
+
+#### Importer
+
+Run the import
+```tx2db import```
+
+The efficient way to import periodically data is to use **CRON**.
+
+#### Analysis
+
+
+### More Info
+
+More info about Transics TX-TANGO API:
+* [TX-TANGO API](http://integratorsprod.transics.com/OperationOverview.aspx)

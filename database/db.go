@@ -1,4 +1,4 @@
-//Package database handles the better-driving database migration
+//Package database handles the database migration
 package database
 
 import (

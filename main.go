@@ -15,7 +15,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//connect to better-driver db
+	//connect to database
 	err = database.InitDB()
 	if err != nil {
 		panic(err)
