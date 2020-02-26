@@ -179,19 +179,19 @@ func ImportToursData() error {
 			tour.LastImport = now.AddDate(0, 0, -1).Truncate(24 * time.Hour)
 		}
 
-		//import activity report
-		err = importActivityReport(&tour, now)
-		if err != nil {
-			log.Printf("ERROR: %s\n", err)
-			return err
-		}
-
 		//import eco monitor report
 		err = importEcoMoniorReport(&tour)
 		if err != nil {
 			log.Printf("ERROR: %s\n", err)
 			return err
 
+		}
+
+		//import activity report
+		err = importActivityReport(&tour, now)
+		if err != nil {
+			log.Printf("ERROR: %s\n", err)
+			return err
 		}
 	}
 	return nil
@@ -267,7 +267,7 @@ func importActivityReport(tour *Tour, now time.Time) error {
 
 func importEcoMoniorReport(tour *Tour) error {
 	//import data from transics
-	txDriverEcoMonitor, err := txtango.GetEcoReport(tour.DriverTransicsID, tour.StartTime)
+	txDriverEcoMonitor, err := txtango.GetEcoReport(tour.DriverTransicsID, tour.LastImport)
 	if err != nil {
 		return err
 	}
@@ -350,8 +350,8 @@ func importEcoMoniorReport(tour *Tour) error {
 			log.Printf("EcoMonitor Report added for driver %d\n", tour.DriverTransicsID)
 			db.Create(&newEcoMonitor)
 
-			//wait 3 seconds to do not be blocked by TX-TANGO
-			time.Sleep(3 * time.Second)
+			//wait 4 seconds to do not be blocked by TX-TANGO
+			time.Sleep(4 * time.Second)
 		}
 	}
 
