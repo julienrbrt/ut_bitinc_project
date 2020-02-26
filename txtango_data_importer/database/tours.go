@@ -349,11 +349,11 @@ func importEcoMoniorReport(tour *Tour) error {
 			//add eco monitor for driver
 			log.Printf("EcoMonitor Report added for driver %d\n", tour.DriverTransicsID)
 			db.Create(&newEcoMonitor)
-
-			//wait 4 seconds to do not be blocked by TX-TANGO
-			time.Sleep(4 * time.Second)
 		}
 	}
+
+	//wait 5 seconds to do not be blocked by TX-TANGO
+	time.Sleep(5 * time.Second)
 
 	return nil
 }
