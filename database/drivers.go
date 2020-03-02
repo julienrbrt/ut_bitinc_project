@@ -16,6 +16,7 @@ type Driver struct {
 	DriverEcoMonitorReportID []DriverEcoMonitorReport `gorm:"foreignkey:DriverTransicsID"`
 	Tour                     []Tour                   `gorm:"foreignkey:DriverTransicsID"`
 	TransicsID               uint
+	PersonID                 string // identifier used within bolk and not by transics
 	Name                     string
 	Language                 string
 	Inactive                 bool
@@ -54,6 +55,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 
 		newDriver := Driver{
 			TransicsID:   data.PersonTransicsID,
+			PersonID:     data.PersonExternalCode,
 			Name:         data.FormattedName,
 			Language:     data.Languages.WorkingLanguage,
 			Inactive:     data.Inactive,
