@@ -5,7 +5,7 @@ import (
 )
 
 var reportCmd = &cobra.Command{
-	Use:   "report",
+	Use:   "gen-report",
 	Short: "Build analysis report",
 	Run: func(cmd *cobra.Command, args []string) {
 

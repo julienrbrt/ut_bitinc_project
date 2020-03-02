@@ -7,13 +7,13 @@ import (
 )
 
 //version number, should always be a float
-var versionNb = 1.0
+var versionNb = "1.0"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version number",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("tx2db v%f\n", versionNb)
+		fmt.Printf("tx2db v%s\n", versionNb)
 	},
 }
 

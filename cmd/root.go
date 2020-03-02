@@ -10,10 +10,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "tx2db",
-	Short: "Imports the Transics TX-TANGO to a database",
-	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-		return nil
-	},
+	Short: "Import Transics TX-TANGO to a database",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

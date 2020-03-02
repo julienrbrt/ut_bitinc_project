@@ -1,6 +1,6 @@
 # BIT Inc. 2020 - Bolk Assignment
 
-## TX-TANGO Data Importer & Analysis
+## TX-TANGO Data Importer & Driver Style Analysis
 
 The program will import data from Transics directly into the database.
 It will checks what fields are already present in the database before importing.
@@ -39,6 +39,13 @@ The efficient way to import periodically data is to use **CRON**.
 
 #### Analysis
 
+`tx2db` will call that analysis script to start the generation of the reports.
+The analysis is performed in R.
+
+Generate the report
+```tx2db gen-report```
+
+The efficient way to generate report periodically is to use **CRON**.
 
 ### More Info
 

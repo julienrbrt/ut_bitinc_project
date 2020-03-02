@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"log"
 	"sync"
 	"tx2db/database"
 
@@ -15,6 +16,14 @@ var importCmd = &cobra.Command{
 	Short: "Import TX-TANGO database",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var err error
+
+		log.Print("Connecting to database...")
+		//connect to database
+		err = database.InitDB()
+		if err != nil {
+			panic(err)
+		}
+		defer database.DB().Close()
 
 		wg.Add(1)
 		go func() {
