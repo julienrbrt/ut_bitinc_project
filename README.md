@@ -16,7 +16,7 @@ sudo snap install go
 ```
 * R
 ```bash
-sudo apt install r-base r-base-dev
+sudo apt install build-essential r-base r-base-dev libcurl4-openssl-dev
 ```
 * SQL Server
 
