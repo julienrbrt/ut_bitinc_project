@@ -10,6 +10,14 @@ The program can also generate report from the data for a specific driver and tru
 ### Requirements
 
 * Go
+```bash
+sudo apt install snapd
+sudo snap install go
+```
+* R
+```bash
+sudo apt install r-base r-base-dev
+```
 * SQL Server
 
 ### Configuration
