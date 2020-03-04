@@ -184,7 +184,7 @@ func ImportToursData() error {
 		diff := int(now.Sub(tour.LastImport).Hours() / 24)
 
 		// for every days elapsed since last import
-		for day := 0; day < diff; day++ {
+		for day := 0; day <= diff; day++ {
 			//import eco monitor report
 			err = importEcoMoniorReport(&tour, day)
 			if err != nil {
