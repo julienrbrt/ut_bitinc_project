@@ -10,7 +10,7 @@ import (
 )
 
 //name of the analysis file
-const analysis = "./analysis/driving_analysis.R"
+const analysis = "./analysis/setup_analysis.R"
 
 var reportCmd = &cobra.Command{
 	Use:   "gen-report",

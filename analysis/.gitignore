@@ -1,6 +1,6 @@
-rlib/
-results/
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+rlib/
+results/

@@ -25,6 +25,14 @@ var importCmd = &cobra.Command{
 		}
 		defer database.DB().Close()
 
+		//connect to redis
+		log.Print("Connecting to redis...")
+		err = database.InitRedis()
+		if err != nil {
+			panic(err)
+		}
+		defer database.RDB().Close()
+
 		wg.Add(1)
 		go func() {
 			err = database.ImportDrivers(&wg)

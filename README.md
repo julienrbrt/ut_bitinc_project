@@ -10,14 +10,8 @@ The program can also generate report from the data for a specific driver and tru
 ### Requirements
 
 * Go
-```bash
-sudo apt install snapd
-sudo snap install go
-```
 * R
-```bash
-sudo apt install build-essential r-base r-base-dev libcurl4-openssl-dev
-```
+* Redis
 * SQL Server
 
 ### Configuration
@@ -36,24 +30,36 @@ GO
 
 ```
 
+#### Dependencies
+
+Install all the required dependencies (on a Ubuntu/Debian based distribution) by running `config/install.sh`.
+
 ### Usage
+
+The efficient way to import or generate report periodically data is to use **CRON**.  
+This can as well be done manually using `tx2db` commands.
 
 #### Importer
 
-Run the import
+Run the import manually
 ```tx2db import```
-
-The efficient way to import periodically data is to use **CRON**.
 
 #### Analysis
 
 `tx2db` will call that analysis script to start the generation of the reports.
 The analysis is performed in R.
 
-Generate the report
+Generate the report manually
 ```tx2db gen-report```
 
-The efficient way to generate report periodically is to use **CRON**.
+### Architechture
+
+* ```analysis``` contains the analysis performed in R and the results of that analysis
+* ```cmd``` are the commands accessible in `tx2db`
+* ```config``` are configuration files used to setup the project (installation, drivers...)
+* ```test``` contains test of the program
+* ```txtango``` implements the TX-TANGO API
+
 
 ### More Info
 
