@@ -285,7 +285,7 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 //importActivityReport import the driver eco monitor of given a tour
 func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 	//import data from transics from two days old
-	txDriverEcoMonitor, err := txtango.GetEcoReport(tour.DriverTransicsID, tour.LastImport.AddDate(0, 0, ecoMonitorDayDifference-elapsedDay))
+	txDriverEcoMonitor, err := txtango.GetEcoReport(tour.DriverTransicsID, tour.LastImport.AddDate(0, 0, -ecoMonitorDayDifference-elapsedDay))
 	if err != nil {
 		return err
 	}
