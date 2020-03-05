@@ -5,7 +5,7 @@
 The program will import data from Transics directly into the database.
 It will checks what fields are already present in the database before importing.
 
-The program can also generate report from the data for a specific driver and truck for a given period of time.
+The program can also generate reports from the data for a specific drivers and trucks for a given period of time.
 
 ### Requirements
 
@@ -32,7 +32,7 @@ GO
 
 #### Dependencies
 
-Install all the required dependencies (on a Ubuntu/Debian based distribution) by running `config/install.sh`.
+Install the required dependencies (on a Ubuntu/Debian based distribution) by running `config/install.sh` in superuser (or using sudo).
 
 ### Usage
 
@@ -46,7 +46,7 @@ Run the import manually
 
 #### Analysis
 
-`tx2db` will call that analysis script to start the generation of the reports.
+`tx2db` will call the analysis scripts to start the generation of the reports.
 The analysis is performed in R.
 
 Generate the report manually
