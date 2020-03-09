@@ -244,6 +244,9 @@ func ImportToursData(ignoreLastImport bool) error {
 
 //importActivityReport import the truck activity report of a given tour
 func importActivityReport(tour *Tour, elapsedDay int) error {
+	//wait to do not be blocked by Transics
+	time.Sleep(transicsWaitTime)
+
 	//build date range
 	start := tour.LastImport.AddDate(0, 0, -elapsedDay)
 	end := start.AddDate(0, 0, 1)
@@ -330,14 +333,14 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 		}
 	}
 
-	//wait to do not be blocked by Transics
-	time.Sleep(transicsWaitTime)
-
 	return nil
 }
 
 //importActivityReport import the driver eco monitor of given a tour
 func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
+	//wait to do not be blocked by Transics
+	time.Sleep(transicsWaitTime)
+
 	//build date range
 	start := tour.LastImport.AddDate(0, 0, -elapsedDay)
 	end := start.AddDate(0, 0, 3)
@@ -446,9 +449,6 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 			log.Printf("EcoMonitorReport added in tour %d\n", tour.ID)
 		}
 	}
-
-	//wait to do not be blocked by Transics
-	time.Sleep(transicsWaitTime)
 
 	return nil
 }

@@ -1,18 +1,9 @@
-#Setup Driving Style Analysis in R
+#Driving Style Analysis in R: Setup
 
-#Path
-rLib <- "./analysis/rlib"
-result <- "./analysis/results"
-#Add folder to library
-.libPaths(c(rLib, .libPaths()))
+#Set working directory
+setwd("./analysis")
 
 #Load required libraries
-if (!require(tidyverse)) {
-    install.packages("readr", dep = TRUE, INSTALL_opts = c('--no-lock'))
-    install.packages("tidyverse", dep = TRUE, INSTALL_opts = c('--no-lock'))
-}
-library(tidyverse)
-
 if (!require(dotenv)) install.packages("dotenv", dep = TRUE)
 if (!require(odbc)) install.packages("odbc", dep = TRUE)
 
