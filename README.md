@@ -11,7 +11,6 @@ The program can also generate reports from the data for a specific drivers and t
 
 * Go
 * R
-* Redis
 * SQL Server
 
 ### Configuration

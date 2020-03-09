@@ -8,12 +8,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//WaitGroup is used to wait for all the goroutines launched here to finish
-var wg sync.WaitGroup
+var (
+	//WaitGroup used to wait for all the goroutines launched here to finish
+	wg sync.WaitGroup
+	//ignoreLastImport will ignore the last import date and reimport all the data
+	ignoreLastImport bool
+)
 
 var importCmd = &cobra.Command{
 	Use:   "import",
-	Short: "Import TX-TANGO database",
+	Short: "fetch data from Transics and import it into a database",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var err error
 
@@ -24,14 +28,6 @@ var importCmd = &cobra.Command{
 			panic(err)
 		}
 		defer database.DB().Close()
-
-		//connect to redis
-		log.Print("Connecting to redis...")
-		err = database.InitRedis()
-		if err != nil {
-			panic(err)
-		}
-		defer database.RDB().Close()
 
 		wg.Add(1)
 		go func() {
@@ -49,7 +45,7 @@ var importCmd = &cobra.Command{
 		}
 		wg.Wait()
 
-		err = database.ImportToursData()
+		err = database.ImportToursData(ignoreLastImport)
 		if err != nil {
 			return err
 		}
@@ -59,5 +55,7 @@ var importCmd = &cobra.Command{
 }
 
 func init() {
+	//--ignoreLastImport flag
+	importCmd.PersistentFlags().BoolVar(&ignoreLastImport, "ignoreLastImport", false, "Ignore the last import date and refetch everything")
 	rootCmd.AddCommand(importCmd)
 }

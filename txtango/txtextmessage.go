@@ -35,7 +35,7 @@ type SentTextMessageRequest struct {
 	Message           string
 }
 
-//SentTextMessageResponse parses the response from TX-TANGO
+//SentTextMessageResponse parses the response from Transics
 type SentTextMessageResponse struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Text    string   `xml:",chardata"`

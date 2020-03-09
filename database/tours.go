@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-//variable for the number of day in the past the ecoMonitor shall import data
-const ecoMonitorDayDifference = 2
+//Transics waiting time, useful to do not get blocked
+const transicsWaitTime = 5 * time.Second
 
 //Tour represents information data about truck tours
 //A tour is a period of driving connected to one driver
@@ -161,12 +161,18 @@ func buildTour(truck *Truck, driverTransicsID, trailerTransicsID uint, tourStatu
 }
 
 //ImportToursData import TruckActivityReport and DriverEcoMonitorReport
-func ImportToursData() error {
+func ImportToursData(ignoreLastImport bool) error {
 	log.Println("Importing tours data")
 
 	var tours []Tour
-	//getting the lastest tours which have not been imported or changed since last import
-	err := db.Where("last_import IS NULL OR end_time IS NULL OR DATEADD(DAY, ?, end_time) > last_import", ecoMonitorDayDifference).Find(&tours).Error
+	//getting the latest tours which have not been imported or changed since last import
+	//we keep running as well the import for tours already ended since 3 days
+	var err error
+	if ignoreLastImport {
+		err = db.Find(&tours).Error
+	} else {
+		err = db.Where("last_import IS NULL OR end_time IS NULL OR DATEADD(DAY, 3, end_time) > last_import").Find(&tours).Error
+	}
 	if err != nil {
 		return errors.Wrap(err, errDatabaseConnection)
 	}
@@ -174,17 +180,17 @@ func ImportToursData() error {
 	for i, tour := range tours {
 		log.Printf("(%d / %d) %s\n", i+1, len(tours), loadingDataFromTransics)
 
-		// caculate elapsed time betfore last import and queries missing days
-		if (tour.LastImport == time.Time{}) {
-			//if never has been imported, only import from the tour startTime
+		//if never has been imported, only import from the tour startTime
+		if ignoreLastImport || (tour.LastImport == time.Time{}) {
 			tour.LastImport = tour.StartTime
 		}
 
+		// caculate elapsed time betfore last import and queries missing days
 		now := time.Now()
 		diff := int(now.Sub(tour.LastImport).Hours() / 24)
 
 		// for every days elapsed since last import
-		for day := 0; day <= diff; day++ {
+		for day := diff; day > 0; day-- {
 			//import eco monitor report
 			err = importEcoMoniorReport(&tour, day)
 			if err != nil {
@@ -205,13 +211,19 @@ func ImportToursData() error {
 		db.Model(&tour).Where("id = ?", tour.ID).Update(Tour{LastImport: now})
 	}
 
+	//import data from queue
+
 	return nil
 }
 
 //importActivityReport import the truck activity report of a given tour
 func importActivityReport(tour *Tour, elapsedDay int) error {
+	//build date range
+	start := tour.LastImport.AddDate(0, 0, -elapsedDay)
+	end := start.AddDate(0, 0, 1)
+
 	//import data from transics
-	txTruckActivity, err := txtango.GetActivityReport(tour.TruckTransicsID, tour.LastImport.AddDate(0, 0, elapsedDay))
+	txTruckActivity, err := txtango.GetActivityReport(tour.TruckTransicsID, start, end)
 	if err != nil {
 		return err
 	}
@@ -219,11 +231,18 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 	//check and return error
 	if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error != (txtango.TXError{}).Error {
 		log.Printf("ERROR: %s - %s\n", txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.Code, txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.Value)
+		addTourToQueue(tour, txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Errors.Error.Code)
 	}
 
 	//check and print warning
 	if txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning != (txtango.TXWarning{}).Warning {
 		log.Printf("WARNING: %s - %s\n", txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning.Code, txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.Warnings.Warning.Value)
+	}
+
+	//check if the data is actually present
+	if len(txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.ActivityReportItems.ActivityReportItemV11) == 0 {
+		addTourToQueue(tour, reasonQueueNoData)
+		return nil
 	}
 
 	for _, data := range txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.ActivityReportItems.ActivityReportItemV11 {
@@ -242,7 +261,6 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 
 		//check if date is contained in tour date boundaries
 		if tour.StartTime.Before(startTime) && (tour.EndTime.After(endTime) || tour.EndTime == time.Time{}) {
-
 			var truckActivity = TruckActivityReport{}
 			newTruckActivity := TruckActivityReport{
 				TourID:          tour.ID,
@@ -275,7 +293,7 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 				db.Model(&truckActivity).Where(truckActivity).Update(newTruckActivity)
 			}
 
-			log.Printf("Activity added for truck %d\n", tour.TruckTransicsID)
+			log.Printf("TruckActivity added in tour %d\n", tour.ID)
 		}
 	}
 
@@ -284,8 +302,12 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 
 //importActivityReport import the driver eco monitor of given a tour
 func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
-	//import data from transics from two days old
-	txDriverEcoMonitor, err := txtango.GetEcoReport(tour.DriverTransicsID, tour.LastImport.AddDate(0, 0, -ecoMonitorDayDifference-elapsedDay))
+	//build date range
+	start := tour.LastImport.AddDate(0, 0, -elapsedDay)
+	end := start.AddDate(0, 0, 3)
+
+	//import data from transics
+	txDriverEcoMonitor, err := txtango.GetEcoReport(tour.DriverTransicsID, start, end)
 	if err != nil {
 		return err
 	}
@@ -293,12 +315,18 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 	//check and return error
 	if txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Errors.Error != (txtango.TXError{}).Error {
 		log.Printf("ERROR: %s - %s\n", txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Errors.Error.Code, txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Errors.Error.Value)
-
+		addTourToQueue(tour, txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Errors.Error.Code)
 	}
 
 	//check and print warning
 	if txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Warnings.Warning != (txtango.TXWarning{}).Warning {
 		log.Printf("WARNING: %s - %s\n", txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Warnings.Warning.Code, txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.Warnings.Warning.Value)
+	}
+
+	//check if the data is actually present
+	if len(txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.EcoMonitorReportItems.EcoMonitorReportItemV3) == 0 {
+		addTourToQueue(tour, reasonQueueNoData)
+		return nil
 	}
 
 	for _, data := range txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.EcoMonitorReportItems.EcoMonitorReportItemV3 {
@@ -366,21 +394,28 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 			}
 
 			//add eco monitor for driver
-			err := db.Where(ecoMonitor).First(&ecoMonitor).Error
+			err := db.Where(&DriverEcoMonitorReport{TourID: newEcoMonitor.TourID, StartTime: newEcoMonitor.StartTime}).First(&ecoMonitor).Error
 			if err != gorm.ErrRecordNotFound {
 				return errors.Wrap(err, errDatabaseConnection)
 			}
 
-			if err == gorm.ErrRecordNotFound {
-				db.Create(&newEcoMonitor)
-				log.Printf("Eco monitor report added for driver %d\n", tour.DriverTransicsID)
-			}
-
+			db.Create(&newEcoMonitor)
+			log.Printf("EcoMonitorReport added in tour %d\n", tour.ID)
 		}
 	}
 
-	//wait 5 seconds to do not be blocked by TX-TANGO
-	time.Sleep(5 * time.Second)
+	//wait to do not be blocked by Transics
+	time.Sleep(transicsWaitTime)
 
 	return nil
+}
+
+//addTourToQueue add tours that still need to be checked into the tour queue
+func addTourToQueue(tour *Tour, reason string) {
+	data := &TourQueue{}
+
+	err := db.Create(&data).Error
+	if err != nil {
+		log.Fatalf("ERROR: Queue not working: %s", err)
+	}
 }

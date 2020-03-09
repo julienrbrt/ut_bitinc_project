@@ -39,7 +39,7 @@ type GetVehicleRequest struct {
 	Login Login
 }
 
-//GetVehicleResponse parses the response from TX-TANGO -- written using https://www.onlinetool.io/xmltogo/
+//GetVehicleResponse parses the response from Transics -- written using https://www.onlinetool.io/xmltogo/
 type GetVehicleResponse struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Text    string   `xml:",chardata"`

@@ -23,7 +23,7 @@ type Driver struct {
 	LastModified             time.Time
 }
 
-//ImportDrivers imports all the driver from TX-Tango and fill the database
+//ImportDrivers imports all the driver from Transics and fill the database
 func ImportDrivers(wg *sync.WaitGroup) error {
 	//notify WaitGroup that we're done
 	defer wg.Done()

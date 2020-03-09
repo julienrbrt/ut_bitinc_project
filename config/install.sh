@@ -16,6 +16,3 @@ curl https://packages.microsoft.com/config/ubuntu/18.04/prod.list > /etc/apt/sou
 apt-get update
 ACCEPT_EULA=Y apt-get -y install msodbcsql17 r-base r-base-dev unixodbc unixodbc-dev libcurl4-openssl-dev
 ln -sr odbcinst.ini ~/.odbcinst.ini
-
-# Redis dependencies
-apt-get -y install redis

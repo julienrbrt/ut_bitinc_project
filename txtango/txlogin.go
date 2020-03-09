@@ -23,7 +23,7 @@ var loginTemplate = `
 {{ end }}
 `
 
-//Login to login in tx-tango
+//Login to login in Transics
 //login happens in each request
 type Login struct {
 	Date       string

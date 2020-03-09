@@ -41,7 +41,7 @@ type GetActivityReportRequest struct {
 	EndDate           string
 }
 
-//GetActivityReportResponse parses the response from TX-TANGO
+//GetActivityReportResponse parses the response from Transics
 type GetActivityReportResponse struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Text    string   `xml:",chardata"`
@@ -153,10 +153,9 @@ type GetActivityReportResponse struct {
 
 //GetActivityReport wraps SAOPCall to make a Get_ActivityReport_V11 request
 //the date argument is used to get the report of a specific date
-func GetActivityReport(vehicleTransicsID uint, date time.Time) (*GetActivityReportResponse, error) {
-	startDate := date.Format("2006-01-02")
-	// add a day to find the end date
-	endDate := date.AddDate(0, 0, 1).Format("2006-01-02")
+func GetActivityReport(vehicleTransicsID uint, start, end time.Time) (*GetActivityReportResponse, error) {
+	startDate := start.Format("2006-01-02")
+	endDate := end.Format("2006-01-02")
 
 	//make an authenticated request
 	params := &GetActivityReportRequest{

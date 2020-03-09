@@ -34,7 +34,7 @@ func InitDB() error {
 
 	db = conn
 	//Database migration
-	db.Debug().AutoMigrate(&Driver{}, &DriverEcoMonitorReport{}, &Truck{}, &TruckGroup{}, &TruckActivityReport{}, &Trailer{}, &Tour{})
+	db.Debug().AutoMigrate(&Driver{}, &DriverEcoMonitorReport{}, &Truck{}, &TruckGroup{}, &TruckActivityReport{}, &Trailer{}, &Tour{}, &TourQueue{})
 
 	return nil
 }

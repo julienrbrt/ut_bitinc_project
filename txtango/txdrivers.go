@@ -33,7 +33,7 @@ type GetDriversRequest struct {
 	Login Login
 }
 
-//GetDriversResponse parses the response from TX-TANGO
+//GetDriversResponse parses the response from Transics
 type GetDriversResponse struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Text    string   `xml:",chardata"`
