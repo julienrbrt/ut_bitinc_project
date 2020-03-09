@@ -211,10 +211,10 @@ func ImportToursData(ignoreLastImport bool) error {
 	}
 
 	//import data from queue
-	var tourQueue []TourQueue
-	db.Find(&tourQueue)
+	var queue []TourQueue
+	db.Find(&queue)
 
-	for _, data := range tourQueue {
+	for _, data := range queue {
 		var tourQueued Tour
 		err = db.Model(&tourQueued).Where("id = ?", data.TourID).First(&tourQueued).Error
 		if err != nil {
@@ -236,7 +236,7 @@ func ImportToursData(ignoreLastImport bool) error {
 		}
 
 		//element of the queue has been fetched, remove it
-		db.Delete(&tourQueued)
+		db.Delete(&queue)
 	}
 
 	return nil
