@@ -1,6 +1,6 @@
 # BIT Inc. 2020 - Bolk Assignment
 
-## TX-TANGO Data Importer & Driver Style Analysis
+## Transics TX-TANGO Data Importer & Driver Style Analysis
 
 The program will import data from Transics directly into the database.
 It will checks what fields are already present in the database before importing.
