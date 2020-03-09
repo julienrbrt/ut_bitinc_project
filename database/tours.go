@@ -190,7 +190,7 @@ func ImportToursData(ignoreLastImport bool) error {
 		diff := int(now.Sub(tour.LastImport).Hours() / 24)
 
 		//for every days elapsed since last import
-		for day := diff; day > 0; day-- {
+		for day := diff; day >= 0; day-- {
 			//import eco monitor report
 			err = importEcoMoniorReport(&tour, day)
 			if err != nil {
@@ -233,10 +233,10 @@ func ImportToursData(ignoreLastImport bool) error {
 		}
 		if err != nil {
 			log.Printf("ERROR: %s\n", err)
+		} else {
+			//element of the queue has been fetched, remove it permanently
+			db.Unscoped().Where(data).Delete(&TourQueue{})
 		}
-
-		//element of the queue has been fetched, remove it
-		db.Delete(&queue)
 	}
 
 	return nil
@@ -329,6 +329,9 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 			log.Printf("TruckActivity added in tour %d\n", tour.ID)
 		}
 	}
+
+	//wait to do not be blocked by Transics
+	time.Sleep(transicsWaitTime)
 
 	return nil
 }
