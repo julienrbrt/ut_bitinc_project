@@ -430,8 +430,11 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 //ImportQueuedToursData imports the data from the queue
 func ImportQueuedToursData(handleError bool) error {
 	var queue []TourQueue
-	db.Order("import_from asc").Find(&queue)
 
+	//get only element from queue where the import_from date is older than 3 days and older date first
+	db.Where("? > import_from", time.Now().AddDate(0, 0, -3)).Order("import_from asc").Find(&queue)
+
+	log.Println("Checking & importing tour from queue")
 	for i, data := range queue {
 		var tourQueued Tour
 

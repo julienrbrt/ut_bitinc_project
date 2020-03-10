@@ -38,18 +38,23 @@ Install the required dependencies (on a Ubuntu/Debian based distribution) by run
 The efficient way to import or generate report periodically data is to use **CRON**.  
 This can as well be done manually using `tx2db` commands.
 
+An exaustive list of available commands can be found by running `tx2db --help`.
+
 #### Importer
 
 Run the import manually
 ```tx2db import```
 
-#### Analysis
+Options exist for this command, more information by running `tx2db import --help`
 
-`tx2db` will call the analysis scripts to start the generation of the reports.
-The analysis is performed in R.
+#### Report
+
+`tx2db` will call the (R) analysis scripts to start the generation of the reports.
 
 Generate the report manually
 ```tx2db gen-report```
+
+Options exist for this command, more information by running `tx2db gen-report --help`
 
 ### Architechture
 
