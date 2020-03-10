@@ -210,34 +210,8 @@ func ImportToursData(ignoreLastImport bool) error {
 		db.Model(&tour).Where("id = ?", tour.ID).Update(Tour{LastImport: now})
 	}
 
-	//import data from queue
-	var queue []TourQueue
-	db.Find(&queue)
-
-	for _, data := range queue {
-		var tourQueued Tour
-		err = db.Model(&tourQueued).Where("id = ?", data.TourID).First(&tourQueued).Error
-		if err != nil {
-			//if a tour of the queue cannot be gotten, skip it
-			continue
-		}
-
-		//caculate elapsed time between last import and day to import
-		diff := int(tourQueued.LastImport.Sub(data.ImportFrom).Hours() / 24)
-
-		switch data.ReportType {
-		case emr:
-			err = importEcoMoniorReport(&tourQueued, diff)
-		case tar:
-			err = importActivityReport(&tourQueued, diff)
-		}
-		if err != nil {
-			log.Printf("ERROR: %s\n", err)
-		} else {
-			//element of the queue has been fetched, remove it permanently
-			db.Unscoped().Where(data).Delete(&TourQueue{})
-		}
-	}
+	//import data from queue - we do not handle error here as not necessary
+	ImportQueuedToursData(false)
 
 	return nil
 }
@@ -448,6 +422,42 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 			db.Create(&newEcoMonitor)
 			log.Printf("EcoMonitorReport added in tour %d\n", tour.ID)
 		}
+	}
+
+	return nil
+}
+
+//ImportQueuedToursData imports the data from the queue
+func ImportQueuedToursData(handleError bool) error {
+	var queue []TourQueue
+	db.Find(&queue)
+
+	for _, data := range queue {
+		var tourQueued Tour
+		err := db.Model(&tourQueued).Where("id = ?", data.TourID).First(&tourQueued).Error
+		if err != nil {
+			//if a tour of the queue cannot be gotten, skip it
+			continue
+		}
+
+		//caculate elapsed time between last import and day to import
+		diff := int(tourQueued.LastImport.Sub(data.ImportFrom).Hours() / 24)
+
+		switch data.ReportType {
+		case emr:
+			err = importEcoMoniorReport(&tourQueued, diff)
+		case tar:
+			err = importActivityReport(&tourQueued, diff)
+		}
+		if err != nil {
+			log.Printf("ERROR: %s\n", err)
+			if handleError {
+				return err
+			}
+		}
+
+		//element of the queue has been fetched, remove it permanently
+		db.Unscoped().Where(data).Delete(&TourQueue{})
 	}
 
 	return nil

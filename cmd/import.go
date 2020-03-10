@@ -13,6 +13,8 @@ var (
 	wg sync.WaitGroup
 	//ignoreLastImport will ignore the last import date and reimport all the data
 	ignoreLastImport bool
+	//importFromOnlyQueue will skip the import process and import it only from the queue
+	importFromQueueOnly bool
 )
 
 var importCmd = &cobra.Command{
@@ -39,15 +41,17 @@ var importCmd = &cobra.Command{
 			err = database.ImportTrucks(&wg)
 		}()
 
-		//TODO add flag to ignore queue
-		//TODO add flag to import queue only
 		//handle only one error
 		if err != nil {
 			return err
 		}
 		wg.Wait()
 
-		err = database.ImportToursData(ignoreLastImport)
+		if importFromQueueOnly {
+			err = database.ImportQueuedToursData(true)
+		} else {
+			err = database.ImportToursData(ignoreLastImport)
+		}
 		if err != nil {
 			return err
 		}
@@ -59,5 +63,7 @@ var importCmd = &cobra.Command{
 func init() {
 	//--ignoreLastImport flag
 	importCmd.PersistentFlags().BoolVar(&ignoreLastImport, "ignoreLastImport", false, "Ignore the last import date and refetch everything")
+	//--importFromOnlyQueue
+	importCmd.PersistentFlags().BoolVar(&importFromQueueOnly, "importFromQueueOnly", false, "Import only missing data from the queue")
 	rootCmd.AddCommand(importCmd)
 }
