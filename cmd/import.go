@@ -39,6 +39,8 @@ var importCmd = &cobra.Command{
 			err = database.ImportTrucks(&wg)
 		}()
 
+		//TODO add flag to ignore queue
+		//TODO add flag to import queue only
 		//handle only one error
 		if err != nil {
 			return err

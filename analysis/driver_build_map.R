@@ -15,10 +15,11 @@ library(tidyverse)
 library(leaflet)
 library(mapview)
 
-buildMap = function(conn, driverTransicsID) {
+buildMap = function(conn, driverTransicsID, startTime, endTime) {
   #get all destinations of a given drivers
   destinations <- tbl(conn, "tours") %>%
     filter(driver_transics_id == driverTransicsID) %>%
+    filter(start_time >= startTime && end_time <= endTime) %>%
     select(id, destination_latitude, destination_longitude) %>%
     collect()
   
@@ -35,4 +36,4 @@ buildMap = function(conn, driverTransicsID) {
   
   map_name <-  paste0("driver_", driverTransicsID, "_maps.png")
   mapshot(map, file = map_name)
-}
+  }
