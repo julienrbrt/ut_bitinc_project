@@ -251,8 +251,6 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		return nil
 	}
 
 	for _, data := range txTruckActivity.Body.GetActivityReportV11Response.GetActivityReportV11Result.ActivityReportItems.ActivityReportItemV11 {
@@ -290,12 +288,11 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 				EndTime:         endTime,
 			}
 
-			err := db.Where(TruckActivityReport{TourID: newTruckActivity.TourID, StartTime: newTruckActivity.StartTime}).First(&truckActivity).Error
-			if err != gorm.ErrRecordNotFound {
-				return errors.Wrap(err, errDatabaseConnection)
-			}
+			if err := db.Where(TruckActivityReport{TourID: newTruckActivity.TourID, StartTime: newTruckActivity.StartTime}).First(&truckActivity).Error; err != nil {
+				if err != gorm.ErrRecordNotFound {
+					return errors.Wrap(err, errDatabaseConnection)
+				}
 
-			if err == gorm.ErrRecordNotFound {
 				//add truck activty
 				db.Create(&newTruckActivity)
 			} else {
@@ -345,8 +342,6 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		return nil
 	}
 
 	for _, data := range txDriverEcoMonitor.Body.GetEcoMonitorReportV4Response.GetEcoMonitorReportV4Result.EcoMonitorReportItems.EcoMonitorReportItemV3 {
@@ -414,12 +409,18 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 			}
 
 			//add eco monitor for driver
-			err := db.Where(&DriverEcoMonitorReport{TourID: newEcoMonitor.TourID, StartTime: newEcoMonitor.StartTime}).First(&ecoMonitor).Error
-			if err != gorm.ErrRecordNotFound {
-				return errors.Wrap(err, errDatabaseConnection)
+			if err := db.Where(&DriverEcoMonitorReport{TourID: newEcoMonitor.TourID, StartTime: newEcoMonitor.StartTime}).First(&ecoMonitor).Error; err != nil {
+				if err != gorm.ErrRecordNotFound {
+					return errors.Wrap(err, errDatabaseConnection)
+				}
+
+				//add ecomonitor report
+				db.Create(&newEcoMonitor)
+			} else {
+				//update ecomonitor report
+				db.Model(&ecoMonitor).Where(ecoMonitor).Update(newEcoMonitor)
 			}
 
-			db.Create(&newEcoMonitor)
 			log.Printf("EcoMonitorReport added in tour %d\n", tour.ID)
 		}
 	}
@@ -436,23 +437,23 @@ func ImportQueuedToursData(handleError bool) error {
 
 	log.Println("Checking & importing tour from queue")
 	for i, data := range queue {
-		var tourQueued Tour
+		var tour Tour
 
 		log.Printf("(%d / %d) Checking & importing tour from queue\n", i+1, len(queue))
-		err := db.Model(&tourQueued).Where("id = ?", data.TourID).First(&tourQueued).Error
+		err := db.Model(&tour).Where("id = ?", data.TourID).First(&tour).Error
 		if err != nil {
 			//if a tour of the queue cannot be gotten, skip it
 			continue
 		}
 
 		//caculate elapsed time between last import and day to import
-		diff := int(tourQueued.LastImport.Sub(data.ImportFrom).Hours() / 24)
+		diff := int(tour.LastImport.Sub(data.ImportFrom).Hours() / 24)
 
 		switch data.ReportType {
 		case emr:
-			err = importEcoMoniorReport(&tourQueued, diff)
+			err = importEcoMoniorReport(&tour, diff)
 		case tar:
-			err = importActivityReport(&tourQueued, diff)
+			err = importActivityReport(&tour, diff)
 		}
 		if err != nil {
 			log.Printf("ERROR: %s\n", err)
@@ -461,8 +462,18 @@ func ImportQueuedToursData(handleError bool) error {
 			}
 		}
 
+		// if data.NbTrial == new.NbTrial
+		var newQueue TourQueue
+		err = db.Model(&TourQueue{}).Where(TourQueue{TourID: data.TourID}).First(&newQueue).Error
+		if err != nil {
+			return err
+		}
+
 		//element of the queue has been fetched, remove it permanently
-		db.Unscoped().Where(data).Delete(&TourQueue{})
+		if data.Trial == newQueue.Trial {
+			db.Unscoped().Where(data).Delete(&TourQueue{})
+		}
+
 	}
 
 	return nil
@@ -470,6 +481,7 @@ func ImportQueuedToursData(handleError bool) error {
 
 //addTourToQueue add tours into the tour queue
 func addTourToQueue(tour *Tour, reportType, reason string) error {
+	var tourQueue TourQueue
 	data := &TourQueue{
 		TourID:     tour.ID,
 		ReportType: reportType,
@@ -477,9 +489,17 @@ func addTourToQueue(tour *Tour, reportType, reason string) error {
 		Reason:     reason,
 	}
 
-	err := db.Create(&data).Error
-	if err != nil {
-		return errors.Wrap(err, "ERROR: Queue not working")
+	if err := db.Model(&tourQueue).Where(TourQueue{TourID: tour.ID}).First(&tourQueue).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return errors.Wrap(err, errDatabaseConnection)
+		}
+
+		//add tour to queue
+		db.Create(&data)
+	} else {
+		//update the number of trial for that queue
+		tourQueue.Trial = tourQueue.Trial + 1
+		db.Save(&tourQueue)
 	}
 
 	return nil

@@ -19,4 +19,5 @@ type TourQueue struct {
 	ReportType string // should only be tar or emr
 	ImportFrom time.Time
 	Reason     string
+	Trial      int //number of time the element of the queue has been tried to be imported
 }
