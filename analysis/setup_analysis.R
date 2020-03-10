@@ -1,8 +1,5 @@
 #Driving Style Analysis in R: Setup
 
-#Set working directory
-setwd("./analysis")
-
 #Load required libraries
 if (!require(dotenv)) install.packages("dotenv", dep = TRUE)
 if (!require(odbc)) install.packages("odbc", dep = TRUE)
@@ -24,3 +21,14 @@ conn <- dbConnect(odbc(),
                  UID = db_username,
                  PWD = db_password,
                  Port = 1433)
+
+#Set working directory
+setwd("analysis")
+
+#Save/Restore .RData
+rdata <- ".RData"
+if (file.exists(rdata)) {
+  load(rdata)
+} else {
+  save.image()
+}

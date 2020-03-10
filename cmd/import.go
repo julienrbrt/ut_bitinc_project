@@ -2,15 +2,12 @@ package cmd
 
 import (
 	"log"
-	"sync"
 	"tx2db/database"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	//WaitGroup used to wait for all the goroutines launched here to finish
-	wg sync.WaitGroup
 	//ignoreLastImport will ignore the last import date and reimport all the data
 	ignoreLastImport bool
 	//importFromOnlyQueue will skip the import process and import it only from the queue

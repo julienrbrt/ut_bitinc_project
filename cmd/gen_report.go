@@ -1,37 +1,69 @@
 package cmd
 
 import (
-	"log"
-	"os"
-	"os/exec"
+	"tx2db/template"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-//name of the analysis file
-const analysis = "./analysis/setup_analysis.R"
+var (
+	//flags specifying which report to generates
+	truckReportOnly      bool
+	driverReportOnly     bool
+	driverReportSelfOnly bool
+)
 
 var reportCmd = &cobra.Command{
-	Use:   "gen-report",
-	Short: "Build analysis report",
+	Use:   "gen-report [OPTIONS]",
+	Short: "Generate analysis report",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Println("Starting analysis...")
+		var err error
 
-		//run R analysis
-		r := exec.Command("Rscript", analysis)
-		//display error and output
-		r.Stdout = os.Stdout
-		r.Stderr = os.Stderr
-
-		err := r.Run()
-		if err != nil {
-			return errors.Wrap(err, "r.Run() failed")
+		if err := template.InitR(); err != nil {
+			return err
 		}
+
+		if truckReportOnly {
+			wg.Add(1)
+			go func() {
+				err = template.BuildTruckReport(&wg)
+			}()
+		}
+
+		if driverReportOnly {
+			wg.Add(1)
+			go func() {
+				err = template.BuildDriverReport(&wg)
+			}()
+		}
+
+		if driverReportSelfOnly {
+			wg.Add(1)
+			go func() {
+				err = template.BuildDriverSelfReport(&wg)
+			}()
+		}
+
+		//handle only one error
+		if err != nil {
+			return err
+		}
+
+		if !truckReportOnly && !driverReportOnly && !driverReportSelfOnly {
+
+		}
+		wg.Wait()
+
 		return nil
 	},
 }
 
 func init() {
+	//--truckReportOnly flag
+	reportCmd.PersistentFlags().BoolVar(&truckReportOnly, "truckReportOnly", false, "Generate truck reports only")
+	//--driverReportOnly flag
+	reportCmd.PersistentFlags().BoolVar(&driverReportOnly, "driverReportOnly", false, "Generate driver reports only")
+	//--driverReportSelfOnly flag
+	reportCmd.PersistentFlags().BoolVar(&driverReportSelfOnly, "driverReportSelfOnly", false, "Generate driver reports compared to themself only")
 	rootCmd.AddCommand(reportCmd)
 }

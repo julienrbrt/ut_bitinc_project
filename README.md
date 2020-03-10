@@ -53,7 +53,7 @@ Generate the report manually
 
 ### Architechture
 
-* ```analysis``` contains the analysis performed in R and the results of that analysis
+* ```analysis``` contains the analysis performed in R
 * ```cmd``` are the commands accessible in `tx2db`
 * ```config``` are configuration files used to setup the project (installation, drivers...). The files might require modification depending on which system `tx2db` is deployed.
 * ```template``` contains logic and the `.html` templates used to build reports

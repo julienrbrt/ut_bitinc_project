@@ -3,8 +3,14 @@ package cmd
 import (
 	"log"
 	"os"
+	"sync"
 
 	"github.com/spf13/cobra"
+)
+
+var (
+	//WaitGroup used to wait for all the goroutines launched here to finish
+	wg sync.WaitGroup
 )
 
 // rootCmd represents the base command when called without any subcommands
