@@ -430,10 +430,12 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 //ImportQueuedToursData imports the data from the queue
 func ImportQueuedToursData(handleError bool) error {
 	var queue []TourQueue
-	db.Find(&queue)
+	db.Order("import_from asc").Find(&queue)
 
-	for _, data := range queue {
+	for i, data := range queue {
 		var tourQueued Tour
+
+		log.Printf("(%d / %d) Checking & importing tour from queue\n", i+1, len(queue))
 		err := db.Model(&tourQueued).Where("id = ?", data.TourID).First(&tourQueued).Error
 		if err != nil {
 			//if a tour of the queue cannot be gotten, skip it
