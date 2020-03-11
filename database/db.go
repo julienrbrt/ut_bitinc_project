@@ -10,7 +10,11 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mssql" // driver mssql
 )
 
-var db *gorm.DB
+//DB is the database object
+var DB *gorm.DB
+
+//ErrorDB specified an connection error to the database
+var ErrorDB = "Connection error to the database"
 
 //InitDB initialize the sql database
 //We are using an GO ORM named GORM
@@ -32,14 +36,9 @@ func InitDB() error {
 		return err
 	}
 
-	db = conn
+	DB = conn
 	//Database migration
-	db.Debug().AutoMigrate(&Driver{}, &DriverEcoMonitorReport{}, &Truck{}, &TruckGroup{}, &TruckActivityReport{}, &Trailer{}, &Tour{}, &TourQueue{})
+	DB.Debug().AutoMigrate(&Driver{}, &DriverEcoMonitorReport{}, &Truck{}, &TruckGroup{}, &TruckActivityReport{}, &Trailer{}, &Tour{}, &TourQueue{})
 
 	return nil
-}
-
-//DB returns a handle to the DB object
-func DB() *gorm.DB {
-	return db
 }

@@ -119,27 +119,27 @@ func buildTour(truck *Truck, driverTransicsID, trailerTransicsID uint, tourStatu
 	}
 
 	status := "Skipped"
-	if err := db.Where(newTour).First(&tour).Error; err != nil {
+	if err := DB.Where(newTour).First(&tour).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return errors.Wrap(err, errDatabaseConnection)
+			return errors.Wrap(err, ErrorDB)
 		}
 
 		//check how many tour has a truck
 		var count int
-		if err = db.Model(&tour).Where(Tour{TruckTransicsID: truck.TransicsID}).Count(&count).Error; err != nil {
-			return errors.Wrap(err, errDatabaseConnection)
+		if err = DB.Model(&tour).Where(Tour{TruckTransicsID: truck.TransicsID}).Count(&count).Error; err != nil {
+			return errors.Wrap(err, ErrorDB)
 		}
 
 		now := time.Now()
 		if count > 0 {
 			// Get old tour
 			var oldTour Tour
-			if err := db.Model(&tour).Where(Tour{TruckTransicsID: truck.TransicsID}).Last(&oldTour).Error; err != nil {
-				return errors.Wrap(err, errDatabaseConnection)
+			if err := DB.Model(&tour).Where(Tour{TruckTransicsID: truck.TransicsID}).Last(&oldTour).Error; err != nil {
+				return errors.Wrap(err, ErrorDB)
 			}
 
 			// Start new tour and old tour using now date
-			db.Model(&tour).Where(oldTour).Update(Tour{EndTime: now})
+			DB.Model(&tour).Where(oldTour).Update(Tour{EndTime: now})
 		}
 
 		// create tour
@@ -148,10 +148,10 @@ func buildTour(truck *Truck, driverTransicsID, trailerTransicsID uint, tourStatu
 		//set startTime first ever tour imported set to today's date
 		newTour.StartTime = now
 		newTour.Status = tourStatus
-		db.Create(&newTour)
+		DB.Create(&newTour)
 	} else if truck.LastModified.After(tour.UpdatedAt) { // update tour
 		status = "Updating"
-		db.Model(&tour).Where(newTour).Update(Tour{Status: tourStatus})
+		DB.Model(&tour).Where(newTour).Update(Tour{Status: tourStatus})
 	}
 
 	//add tour
@@ -169,12 +169,12 @@ func ImportToursData(ignoreLastImport bool) error {
 	//we keep running as well the import for tours already ended since 3 days
 	var err error
 	if ignoreLastImport {
-		err = db.Find(&tours).Error
+		err = DB.Find(&tours).Error
 	} else {
-		err = db.Where("last_import IS NULL OR end_time IS NULL OR DATEADD(DAY, 3, end_time) > last_import").Find(&tours).Error
+		err = DB.Where("last_import IS NULL OR end_time IS NULL OR DATEADD(DAY, 3, end_time) > last_import").Find(&tours).Error
 	}
 	if err != nil {
-		return errors.Wrap(err, errDatabaseConnection)
+		return errors.Wrap(err, ErrorDB)
 	}
 
 	for i, tour := range tours {
@@ -207,7 +207,7 @@ func ImportToursData(ignoreLastImport bool) error {
 		}
 
 		//update last import tour date
-		db.Model(&tour).Where("id = ?", tour.ID).Update(Tour{LastImport: now})
+		DB.Model(&tour).Where("id = ?", tour.ID).Update(Tour{LastImport: now})
 	}
 
 	//import data from queue - we do not handle error here as not necessary
@@ -288,17 +288,17 @@ func importActivityReport(tour *Tour, elapsedDay int) error {
 				EndTime:         endTime,
 			}
 
-			if err := db.Where(TruckActivityReport{TourID: newTruckActivity.TourID, StartTime: newTruckActivity.StartTime}).First(&truckActivity).Error; err != nil {
+			if err := DB.Where(TruckActivityReport{TourID: newTruckActivity.TourID, StartTime: newTruckActivity.StartTime}).First(&truckActivity).Error; err != nil {
 				if err != gorm.ErrRecordNotFound {
-					return errors.Wrap(err, errDatabaseConnection)
+					return errors.Wrap(err, ErrorDB)
 				}
 
 				//add truck activty
-				db.Create(&newTruckActivity)
+				DB.Create(&newTruckActivity)
 				log.Printf("TruckActivity added in tour %d\n", tour.ID)
 			} else if truckActivity != newTruckActivity {
 				//update activity report
-				db.Model(&truckActivity).Where(truckActivity).Update(newTruckActivity)
+				DB.Model(&truckActivity).Where(truckActivity).Update(newTruckActivity)
 				log.Printf("TruckActivity updated in tour %d\n", tour.ID)
 			}
 
@@ -410,17 +410,17 @@ func importEcoMoniorReport(tour *Tour, elapsedDay int) error {
 			}
 
 			//add eco monitor for driver
-			if err := db.Where(&DriverEcoMonitorReport{TourID: newEcoMonitor.TourID, StartTime: newEcoMonitor.StartTime}).First(&ecoMonitor).Error; err != nil {
+			if err := DB.Where(&DriverEcoMonitorReport{TourID: newEcoMonitor.TourID, StartTime: newEcoMonitor.StartTime}).First(&ecoMonitor).Error; err != nil {
 				if err != gorm.ErrRecordNotFound {
-					return errors.Wrap(err, errDatabaseConnection)
+					return errors.Wrap(err, ErrorDB)
 				}
 
 				//add ecomonitor report
-				db.Create(&newEcoMonitor)
+				DB.Create(&newEcoMonitor)
 				log.Printf("EcoMonitorReport added in tour %d\n", tour.ID)
 			} else if ecoMonitor != newEcoMonitor {
 				//update ecomonitor report
-				db.Model(&ecoMonitor).Where(ecoMonitor).Update(newEcoMonitor)
+				DB.Model(&ecoMonitor).Where(ecoMonitor).Update(newEcoMonitor)
 				log.Printf("EcoMonitorReport updated in tour %d\n", tour.ID)
 			}
 		}

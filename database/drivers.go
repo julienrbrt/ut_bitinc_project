@@ -10,6 +10,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	loadingDataFromTransics = "Loading data from Transics TX-TANGO... this could take a while..."
+	errParsingTransicsID    = "Error when parsing TransicsID"
+	errParsingDate          = "Error while parsing date from Transics TX-TANGO"
+	errParsingCoordinates   = "Error parsing destination coordinates"
+)
+
 //Driver represents driver of a truck
 type Driver struct {
 	gorm.Model
@@ -66,17 +73,17 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 		var driver Driver
 		status := "Skipped"
 
-		if err = db.Where(Driver{TransicsID: newDriver.TransicsID}).First(&driver).Error; err != nil {
+		if err = DB.Where(Driver{TransicsID: newDriver.TransicsID}).First(&driver).Error; err != nil {
 			if err != gorm.ErrRecordNotFound {
-				return errors.Wrap(err, errDatabaseConnection)
+				return errors.Wrap(err, ErrorDB)
 			}
 			// add driver
 			status = "Importing"
-			db.Create(&newDriver)
+			DB.Create(&newDriver)
 		} else if driver.LastModified.Before(newDriver.LastModified) {
 			// update driver
 			status = "Updated"
-			db.Model(&driver).Where(Driver{TransicsID: newDriver.TransicsID}).Update(newDriver)
+			DB.Model(&driver).Where(Driver{TransicsID: newDriver.TransicsID}).Update(newDriver)
 		}
 
 		log.Printf("(%d / %d) %s driver %d\n", i+1, len(txDrivers.Body.GetDriversV9Response.GetDriversV9Result.Persons.InterfacePersonResultV9), status, newDriver.TransicsID)

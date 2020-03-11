@@ -5,7 +5,7 @@
 The program will import data from Transics directly into the database.
 It will checks what fields are already present in the database before importing.
 
-The program can also generate reports from the data for a specific drivers and trucks for a given period of time.
+The program can also generate reports aimed at drivers for a given period of time.
 
 ### Requirements
 
@@ -49,19 +49,14 @@ Options exist for this command, more information by running `tx2db import --help
 
 #### Report
 
-`tx2db` will call the (R) analysis scripts to start the generation of the reports.
-
 Generate the report manually
 ```tx2db gen-report```
 
-Options exist for this command, more information by running `tx2db gen-report --help`
-
 ### Architechture
 
-* ```analysis``` contains the analysis performed in R
+* ```analysis``` contains the driver analysis. Graphs are built with R and the different metrics in Go. The template of the report is written in `.html`.
 * ```cmd``` are the commands accessible in `tx2db`
 * ```config``` are configuration files used to setup the project (installation, drivers...). The files might require modification depending on which system `tx2db` is deployed.
-* ```template``` contains logic and the `.html` templates used to build reports
 * ```test``` contains test of the program
 * ```txtango``` implements the TX-TANGO API
 

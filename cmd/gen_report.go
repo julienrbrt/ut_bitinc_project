@@ -1,69 +1,36 @@
 package cmd
 
 import (
-	"tx2db/template"
+	"log"
+	"tx2db/analysis"
+	"tx2db/database"
 
 	"github.com/spf13/cobra"
 )
 
-var (
-	//flags specifying which report to generates
-	truckReportOnly      bool
-	driverReportOnly     bool
-	driverReportSelfOnly bool
-)
-
 var reportCmd = &cobra.Command{
-	Use:   "gen-report [OPTIONS]",
-	Short: "Generate analysis report",
+	Use:   "gen-report",
+	Short: "Generate driver reports aimed at drivers only",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var err error
 
-		if err := template.InitR(); err != nil {
-			return err
+		log.Print("Connecting to database...")
+		//connect to database
+		err = database.InitDB()
+		if err != nil {
+			panic(err)
 		}
+		defer database.DB.Close()
 
-		if truckReportOnly {
-			wg.Add(1)
-			go func() {
-				err = template.BuildTruckReport(&wg)
-			}()
-		}
-
-		if driverReportOnly {
-			wg.Add(1)
-			go func() {
-				err = template.BuildDriverReport(&wg)
-			}()
-		}
-
-		if driverReportSelfOnly {
-			wg.Add(1)
-			go func() {
-				err = template.BuildDriverSelfReport(&wg)
-			}()
-		}
-
-		//handle only one error
+		err = analysis.BuildDriverReport()
 		if err != nil {
 			return err
 		}
-
-		if !truckReportOnly && !driverReportOnly && !driverReportSelfOnly {
-
-		}
-		wg.Wait()
 
 		return nil
 	},
 }
 
 func init() {
-	//--truckReportOnly flag
-	reportCmd.PersistentFlags().BoolVar(&truckReportOnly, "truckReportOnly", false, "Generate truck reports only")
-	//--driverReportOnly flag
-	reportCmd.PersistentFlags().BoolVar(&driverReportOnly, "driverReportOnly", false, "Generate driver reports only")
-	//--driverReportSelfOnly flag
-	reportCmd.PersistentFlags().BoolVar(&driverReportSelfOnly, "driverReportSelfOnly", false, "Generate driver reports compared to themself only")
 	rootCmd.AddCommand(reportCmd)
 }

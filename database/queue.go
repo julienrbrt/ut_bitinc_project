@@ -29,14 +29,14 @@ func ImportQueuedToursData(handleError bool) error {
 	var queue []TourQueue
 
 	//get only element from queue where the import_on date is older than 3 days and older date first
-	db.Where("? > import_on", time.Now().AddDate(0, 0, -3)).Order("import_on asc").Find(&queue)
+	DB.Where("? > import_on", time.Now().AddDate(0, 0, -3)).Order("import_on asc").Find(&queue)
 
 	log.Println("Checking & importing tour from queue")
 	for i, data := range queue {
 		var tour Tour
 
 		log.Printf("(%d / %d) Checking & importing tour from queue\n", i+1, len(queue))
-		err := db.Model(&tour).Where("id = ?", data.TourID).First(&tour).Error
+		err := DB.Model(&tour).Where("id = ?", data.TourID).First(&tour).Error
 		if err != nil {
 			//if a tour of the queue cannot be gotten, skip it
 			continue
@@ -58,16 +58,15 @@ func ImportQueuedToursData(handleError bool) error {
 			}
 		}
 
-		// if data.NbTrial == new.NbTrial
 		var newQueue TourQueue
-		err = db.Model(&TourQueue{}).Where(TourQueue{TourID: data.TourID}).First(&newQueue).Error
+		err = DB.Model(&TourQueue{}).Where(TourQueue{TourID: data.TourID}).First(&newQueue).Error
 		if err != nil {
 			return err
 		}
 
 		//element of the queue has been fetched, remove it permanently
 		if data.Trial == newQueue.Trial {
-			db.Unscoped().Where(data).Delete(&TourQueue{})
+			DB.Unscoped().Where(data).Delete(&TourQueue{})
 		}
 
 	}
@@ -85,17 +84,17 @@ func addTourToQueue(tour *Tour, importOn time.Time, reportType, reason string) e
 		Reason:     reason,
 	}
 
-	if err := db.Model(&tourQueue).Where(TourQueue{TourID: tour.ID}).First(&tourQueue).Error; err != nil {
+	if err := DB.Model(&tourQueue).Where(TourQueue{TourID: tour.ID}).First(&tourQueue).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return errors.Wrap(err, errDatabaseConnection)
+			return errors.Wrap(err, ErrorDB)
 		}
 
 		//add tour to queue
-		db.Create(&data)
+		DB.Create(&data)
 	} else {
 		//update the number of trial for that queue
 		tourQueue.Trial = tourQueue.Trial + 1
-		db.Save(&tourQueue)
+		DB.Save(&tourQueue)
 	}
 
 	return nil

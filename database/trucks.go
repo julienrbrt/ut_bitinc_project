@@ -10,14 +10,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	loadingDataFromTransics = "Loading data from Transics TX-TANGO... this could take a while..."
-	errParsingTransicsID    = "Error when parsing TransicsID"
-	errParsingDate          = "Error while parsing date from Transics TX-TANGO"
-	errParsingCoordinates   = "Error parsing destination coordinates"
-	errDatabaseConnection   = "Connection error to the database"
-)
-
 //Truck represents trucks
 type Truck struct {
 	gorm.Model
@@ -89,18 +81,18 @@ func ImportTrucks(wg *sync.WaitGroup) error {
 		var truck Truck
 		status := "Skipped"
 
-		if err = db.Where(Truck{TransicsID: newTruck.TransicsID}).First(&truck).Error; err != nil {
+		if err = DB.Where(Truck{TransicsID: newTruck.TransicsID}).First(&truck).Error; err != nil {
 			if err != gorm.ErrRecordNotFound {
-				return errors.Wrap(err, errDatabaseConnection)
+				return errors.Wrap(err, ErrorDB)
 			}
 			// add truck
 			status = "Importing"
-			db.Create(&newTruck)
+			DB.Create(&newTruck)
 			truck = newTruck
 		} else if truck.LastModified.Before(newTruck.LastModified) {
 			// update truck
 			status = "Updated"
-			db.Model(&truck).Where(Truck{TransicsID: newTruck.TransicsID}).Update(newTruck)
+			DB.Model(&truck).Where(Truck{TransicsID: newTruck.TransicsID}).Update(newTruck)
 		}
 
 		//add truck
@@ -133,21 +125,21 @@ func addTrailer(txTrailer *txtango.TXTrailer) {
 		LicensePlate: txTrailer.LicensePlate,
 	}
 
-	db.FirstOrCreate(&trailer, trailer)
+	DB.FirstOrCreate(&trailer, trailer)
 }
 
 //assign a group to a truck
 //as error are not important for this sub-category, there no error handling
 func addGroup(truck *Truck, groupName string) {
 	truckGroup := TruckGroup{Name: groupName}
-	db.FirstOrCreate(&truckGroup, truckGroup)
+	DB.FirstOrCreate(&truckGroup, truckGroup)
 
-	if err := db.Model(&truckGroup).Association("Truck").Find(&truck).Error; err != nil {
+	if err := DB.Model(&truckGroup).Association("Truck").Find(&truck).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return
 		}
 
-		log.Printf("Truck %d added to TruckGroup %s (now containing %d trucks)\n", truck.TransicsID, groupName, db.Model(&truckGroup).Association("Truck").Count())
-		db.Model(&truckGroup).Association("Truck").Append(truck)
+		log.Printf("Truck %d added to TruckGroup %s (now containing %d trucks)\n", truck.TransicsID, groupName, DB.Model(&truckGroup).Association("Truck").Count())
+		DB.Model(&truckGroup).Association("Truck").Append(truck)
 	}
 }

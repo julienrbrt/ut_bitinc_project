@@ -28,11 +28,11 @@ var importCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		defer database.DB().Close()
+		defer database.DB.Close()
 
 		//cleanTourQueue if requested
 		if cleanTourQueue {
-			database.DB().Unscoped().Delete(&[]database.TourQueue{})
+			database.DB.Unscoped().Delete(&[]database.TourQueue{})
 			log.Print("Sucessfully cleaned tour queue")
 		}
 
