@@ -5,6 +5,7 @@
 *.so
 *.dylib
 tx2db
+.env
 
 # Test binary, built with `go test -c`
 *.test
