@@ -13,6 +13,27 @@ type DriverMetric struct {
 	Metric     string
 }
 
+//getTruckDriven gets the trucks that a driver has been driving
+func getTruckDriven(start time.Time) ([]DriverMetric, error) {
+	//build the endtime
+	end := getReportEndTime(start)
+
+	var driversMetrics []DriverMetric
+	if err := database.DB.Raw(`
+	SELECT t.driver_transics_id as transics_id, trucks.license_plate as metric
+	FROM tours t
+	INNER JOIN trucks
+	ON t.truck_transics_id = trucks.transics_id
+	WHERE t.start_time >= ?
+	AND t.end_time <= ?
+	GROUP BY t.driver_transics_id, trucks.license_plate`,
+		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&driversMetrics).Error; err != nil {
+		return driversMetrics, errors.Wrap(err, database.ErrorDB)
+	}
+
+	return driversMetrics, nil
+}
+
 //getTotalPanicBrakes gets the number of panic brakes performed
 func getTotalPanicBrakes(start time.Time) ([]DriverMetric, error) {
 	//build the endtime
