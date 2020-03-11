@@ -58,7 +58,8 @@ buildMap = function(conn, driverTransicsID, startTime, endTime) {
       lat = ~ destination_latitude,
       lng = ~ destination_longitude,
       group = ~ id,
-      color = "#0984e3"
+      color = "#003580",
+      opacity = 0.2
     )
   
   map_name <-  paste0("driver_", driverTransicsID, "_maps.png")

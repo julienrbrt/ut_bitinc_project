@@ -19,9 +19,9 @@ import (
 
 var (
 	//name of the R setup analysis file
-	analysis = "./analysis/setup_analysis.R"
+	analysis = "./analysis/driver_graphs.R"
 	//path of templates used to build the reports
-	driverReportPath = path.Join("template", "html", "tmpl_driver_report.html")
+	reportPath = path.Join("analysis", "driver_report.html")
 )
 
 //getReportTemplate read template file to a string object
@@ -76,11 +76,10 @@ func BuildDriverReport() error {
 	log.Print("Building drivers reports for drivers...")
 
 	//get metrics
-	metric, err := getDrivenKm(time.Now().AddDate(0, 0, -14))
+	_, err := getTruckDriven(time.Now().AddDate(0, 0, -14))
 	if err != nil {
 		return err
 	}
-	log.Println(metric)
 
 	//initialize R
 	// if err := initR(); err != nil {
