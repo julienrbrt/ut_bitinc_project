@@ -119,7 +119,10 @@ func buildTour(truck *Truck, driverTransicsID, trailerTransicsID uint, tourStatu
 	}
 
 	status := "Skipped"
-	if err := DB.Where(newTour).First(&tour).Error; err != nil {
+	err := DB.Where(newTour).Last(&tour).Error
+
+	//if do not exist or tour already ended
+	if err != nil || tour.EndTime != (time.Time{}) {
 		if err != gorm.ErrRecordNotFound {
 			return errors.Wrap(err, ErrorDB)
 		}
@@ -144,7 +147,6 @@ func buildTour(truck *Truck, driverTransicsID, trailerTransicsID uint, tourStatu
 
 		// create tour
 		status = "Creating"
-
 		//set startTime first ever tour imported set to today's date
 		newTour.StartTime = now
 		newTour.Status = tourStatus
