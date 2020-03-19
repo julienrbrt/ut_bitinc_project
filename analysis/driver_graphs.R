@@ -10,6 +10,8 @@ if (!require(mapview)) {
   library(webshot)
   webshot::install_phantomjs()
 }
+if (!require(gridExtra)) install.packages("gridExtra", dep = TRUE)
+if (!require(grid)) install.packages("grid", dep = TRUE)
 
 #Load .env file
 library(dotenv)
@@ -41,6 +43,21 @@ library(tidyverse)
 theme_set(theme_bw())
 library(leaflet)
 library(mapview)
+library(gridExtra)
+library(grid)
+
+#parse dates
+parseDate = function(datecolumn) {
+  if (datecolumn == "0001-01-01 00:00:00.0000000 +00:00") {
+    return(as.character(Sys.time()))
+  } else {
+    yEnd = str_sub(datecolumn, 1,-16)
+    zEnd = str_sub(datecolumn, 29,-7)
+    end_time = paste(yEnd, zEnd, sep = "")
+    return(end_time)
+  }
+}
+
 
 #build a map of visited places of a drivers
 buildMap = function(conn, driverTransicsID, startTime, endTime) {
@@ -161,4 +178,36 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
   #save it to file
   graph_name <-  paste0("driver_", driverTransicsID, "_high_speed.png")
   ggsave(graph_name)
+}
+
+#Build list of activities
+buildActivityList = function(conn, transicsID, startTime, endTime) {
+  #select driver ids and tour ids from tours
+  activityList = tbl(conn, "tours") %>%
+    filter(start_time>= startTime && end_time <= endTime && driver_transics_id == transicsID) %>%
+    select(tour_id = id, driver_transics_id) %>%
+    # join tours and activities to connect driver _ids to activities
+    inner_join(tbl(conn,"truck_activity_reports") %>% 
+               filter(start_time>= startTime && end_time <= endTime) %>%
+               select(tour_id, activity, start_time, end_time), by = "tour_id") %>%
+    collect() %>%
+    #format end and start time
+    mutate(start_time = sapply(start_time, parseDate)) %>%
+    mutate(end_time = sapply(end_time, parseDate)) %>%
+    #create duration column
+    mutate(duration = difftime(end_time,start_time, units = "secs")) %>%
+    filter(duration > 0) %>%
+    group_by(activity) %>%
+    summarize(duration = sum(as.numeric(duration)))
+
+  #build grid
+  data = as.data.frame(paste(round(activityList$duration / sum(activityList$duration) * 100, digits = 2), "%",sep = ""), row.names = activityList$activity)
+  tt3 <- ttheme_minimal(core=list(bg_params = list(fill = blues9[4:1], col=NA), fg_params=list(fontface=3)),colhead=list(fg_params=list(col="#003580", fontface=4L)), rowhead=list(fg_params=list(col="#003580", fontface=3L)), base_size = 28)
+  
+  #save it to file
+  graph_name <-  paste0("driver_", transicsID, "_activity.png")
+  png(graph_name)
+  tableGrob(data, cols = "Total Duration", theme = tt3) %>%
+    grid.arrange()
+  dev.off()
 }
