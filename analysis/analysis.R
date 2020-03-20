@@ -23,6 +23,7 @@ db_password <- Sys.getenv("DB_PASSWORD")
 #Connect to SQL database
 library(DBI)
 library(odbc)
+#This is commented as the connection will be done from Go
 conn <- dbConnect(odbc(),
                  Driver = "SQL Server",
                  Server = db_host,
@@ -32,7 +33,7 @@ conn <- dbConnect(odbc(),
                  Port = 1433)
 
 #Set working directory
-setwd("analysis")
+setwd("analysis/assets/r")
 
 ###############
 #####GRAPH#####
@@ -57,7 +58,6 @@ parseDate = function(datecolumn) {
     return(end_time)
   }
 }
-
 
 #build a map of visited places of a drivers
 buildMap = function(conn, driverTransicsID, startTime, endTime) {
@@ -181,10 +181,10 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
 }
 
 #Build list of activities
-buildActivityList = function(conn, transicsID, startTime, endTime) {
+buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
   #select driver ids and tour ids from tours
   activityList = tbl(conn, "tours") %>%
-    filter(start_time>= startTime && end_time <= endTime && driver_transics_id == transicsID) %>%
+    filter(start_time>= startTime && end_time <= endTime && driver_transics_id == driverTransicsID) %>%
     select(tour_id = id, driver_transics_id) %>%
     # join tours and activities to connect driver _ids to activities
     inner_join(tbl(conn,"truck_activity_reports") %>% 
@@ -205,9 +205,44 @@ buildActivityList = function(conn, transicsID, startTime, endTime) {
   tt3 <- ttheme_minimal(core=list(bg_params = list(fill = blues9[4:1], col=NA), fg_params=list(fontface=3)),colhead=list(fg_params=list(col="#003580", fontface=4L)), rowhead=list(fg_params=list(col="#003580", fontface=3L)), base_size = 28)
   
   #save it to file
-  graph_name <-  paste0("driver_", transicsID, "_activity.png")
+  graph_name <-  paste0("driver_", driverTransicsID, "_activity.png")
   png(graph_name)
   tableGrob(data, cols = "Total Duration", theme = tt3) %>%
     grid.arrange()
   dev.off()
 }
+
+###################
+#####GENERTATE#####
+###################
+
+#get arguments
+args <- commandArgs(trailingOnly = TRUE)
+args <- as.Date(args)
+
+#get list of report to generate
+getReport = function(startTime, endTime) {
+  tours <- tbl(conn, "tours") %>%
+  filter(start_time >= startTime && end_time <= endTime) %>%
+  select(id, driver_transics_id) %>%
+  inner_join(
+    tbl(conn, "driver_eco_monitor_reports") %>% 
+      select(tour_id, distance),
+    by = c("id" = "tour_id")
+  ) %>%
+  filter(distance > 0) %>%
+  distinct(driver_transics_id) %>%
+  collect()
+  
+  return(tours$driver_transics_id)
+}
+
+for (driverTransicsID in getReport(args[1], args[2])){
+  buildMap(conn, driverTransicsID, args[1], args[2])
+  buildIdling(conn, driverTransicsID, args[1], args[2])
+  buildFuelConsumption(conn, driverTransicsID, args[1] - 7, args[2])
+  buildHighSpeed(conn, driverTransicsID, args[1] - 7, args[2])
+  buildActivityList(conn, driverTransicsID, args[1], args[2])
+}
+
+print("all done :)")

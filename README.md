@@ -56,10 +56,8 @@ Generate the report manually
 
 * ```analysis``` contains the driver analysis. Graphs are built with R and the different metrics in Go. The template of the report is written in `.html`.
 * ```cmd``` are the commands accessible in `tx2db`
-* ```config``` are configuration files used to setup the project (installation, drivers...). The files might require modification depending on which system `tx2db` is deployed.
-* ```test``` contains test of the program
+* ```config```  are configuration files: please read [config/README.md](config/README.md).
 * ```txtango``` implements the TX-TANGO API
-
 
 ### More Info
 

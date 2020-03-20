@@ -9,59 +9,13 @@ import (
 
 //DriverMetric defines a driver metric
 type DriverMetric struct {
-	TransicsID uint
+	TransicsID string
 	Metric     string
 }
 
-//getTruckDriven gets the trucks that a driver has been driving
-func getTruckDriven(start time.Time) ([]DriverMetric, error) {
-	//build the endtime
-	end := getReportEndTime(start)
-
-	var driversMetrics []DriverMetric
-	if err := database.DB.Raw(`
-	SELECT t.driver_transics_id as transics_id, trucks.license_plate as metric
-	FROM tours t
-	INNER JOIN trucks
-	ON t.truck_transics_id = trucks.transics_id
-	WHERE t.start_time >= ?
-	AND t.end_time <= ?
-	GROUP BY t.driver_transics_id, trucks.license_plate`,
-		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&driversMetrics).Error; err != nil {
-		return driversMetrics, errors.Wrap(err, database.ErrorDB)
-	}
-
-	return driversMetrics, nil
-}
-
-//getTotalPanicBrakes gets the number of panic brakes performed
-func getTotalPanicBrakes(start time.Time) ([]DriverMetric, error) {
-	//build the endtime
-	end := getReportEndTime(start)
-
-	var driversMetrics []DriverMetric
-	if err := database.DB.Raw(`
-	SELECT demr.driver_transics_id as transics_id, SUM(number_of_panic_brakes) as metric
-	FROM driver_eco_monitor_reports demr
-	INNER JOIN tours t
-	ON demr.tour_id = t.id
-	WHERE number_of_panic_brakes > 0
-	AND t.start_time >= ?
-	AND t.end_time <= ?
-	GROUP BY demr.driver_transics_id`,
-		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&driversMetrics).Error; err != nil {
-		return driversMetrics, errors.Wrap(err, database.ErrorDB)
-	}
-
-	return driversMetrics, nil
-}
-
 //getDrivenKm gets the number of kilometers driven
-func getDrivenKm(start time.Time) ([]DriverMetric, error) {
-	//build the endtime
-	end := getReportEndTime(start)
-
-	var driversMetrics []DriverMetric
+func getDrivenKm(start, end time.Time) ([]DriverMetric, error) {
+	var result []DriverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, FLOOR(SUM(distance)) as metric 
 	FROM driver_eco_monitor_reports demr
@@ -70,20 +24,73 @@ func getDrivenKm(start time.Time) ([]DriverMetric, error) {
 	WHERE distance > 0
 	AND t.start_time >= ?
 	AND t.end_time <= ?
-	GROUP BY demr.driver_transics_id`,
-		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&driversMetrics).Error; err != nil {
-		return driversMetrics, errors.Wrap(err, database.ErrorDB)
+	GROUP BY demr.driver_transics_id
+	ORDER BY demr.driver_transics_id asc`,
+		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
 	}
 
-	return driversMetrics, nil
+	return result, nil
+}
+
+//getDriverName gets a driver name
+func getDriverName(driversList []string) ([]DriverMetric, error) {
+	var result []DriverMetric
+	if err := database.DB.Raw(`
+	SELECT transics_id, name as metric
+	FROM drivers
+	WHERE transics_id IN (?)
+	ORDER BY transics_id asc`,
+		driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
+	}
+
+	return result, nil
+}
+
+//getTruckDriven gets the trucks that a driver has been driving
+func getTruckDriven(driversList []string, start, end time.Time) ([]DriverMetric, error) {
+	var result []DriverMetric
+	if err := database.DB.Raw(`
+	SELECT t.driver_transics_id as transics_id, trucks.license_plate as metric
+	FROM tours t
+	INNER JOIN trucks
+	ON t.truck_transics_id = trucks.transics_id
+	WHERE t.start_time >= ?
+	AND t.end_time <= ?
+	AND t.driver_transics_id IN (?)
+	GROUP BY t.driver_transics_id, trucks.license_plate
+	ORDER BY t.driver_transics_id asc`,
+		start.Format("2006-01-02"), end.Format("2006-01-02"), driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
+	}
+
+	return result, nil
+}
+
+//getTotalPanicBrakes gets the number of panic brakes performed
+func getTotalPanicBrakes(driversList []string, start, end time.Time) ([]DriverMetric, error) {
+	var result []DriverMetric
+	if err := database.DB.Raw(`
+	SELECT demr.driver_transics_id as transics_id, SUM(number_of_panic_brakes) as metric
+	FROM driver_eco_monitor_reports demr
+	INNER JOIN tours t
+	ON demr.tour_id = t.id
+	WHERE t.start_time >= ?
+	AND t.end_time <= ?
+	AND t.driver_transics_id IN (?)
+	GROUP BY demr.driver_transics_id
+	ORDER BY demr.driver_transics_id asc`,
+		start.Format("2006-01-02"), end.Format("2006-01-02"), driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
+	}
+
+	return result, nil
 }
 
 //getVisitedCountries gets the country list where drivers have been
-func getVisitedCountries(start time.Time) ([]DriverMetric, error) {
-	//build the endtime
-	end := getReportEndTime(start)
-
-	var driversMetrics []DriverMetric
+func getVisitedCountries(driversList []string, start, end time.Time) ([]DriverMetric, error) {
+	var result []DriverMetric
 	if err := database.DB.Raw(`
 	SELECT d.transics_id as transics_id, tar.country_code as metric
 	FROM tours t
@@ -93,20 +100,19 @@ func getVisitedCountries(start time.Time) ([]DriverMetric, error) {
 	ON d.transics_id = t.driver_transics_id 
 	WHERE t.start_time >= ?
 	AND t.end_time <= ?
-	GROUP BY transics_id, tar.country_code`,
-		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&driversMetrics).Error; err != nil {
-		return driversMetrics, errors.Wrap(err, database.ErrorDB)
+	AND t.driver_transics_id IN (?)
+	GROUP BY transics_id, tar.country_code
+	ORDER BY transics_id asc`,
+		start.Format("2006-01-02"), end.Format("2006-01-02"), driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
 	}
 
-	return driversMetrics, nil
+	return result, nil
 }
 
 //getRollOutRatio gets ratio of rolling out
-func getRollOutRatio(start time.Time) ([]DriverMetric, error) {
-	//build the endtime
-	end := getReportEndTime(start)
-
-	var driversMetrics []DriverMetric
+func getRollOutRatio(driversList []string, start, end time.Time) ([]DriverMetric, error) {
+	var result []DriverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, SUM(demr.distance_coasting) / SUM(demr.distance) as metric 
 	FROM driver_eco_monitor_reports demr
@@ -114,21 +120,20 @@ func getRollOutRatio(start time.Time) ([]DriverMetric, error) {
 	ON demr.tour_id = t.id
 	WHERE t.start_time >= ?
 	AND t.end_time <= ?
+	AND t.driver_transics_id IN (?)
 	AND distance > 0
-	GROUP BY demr.driver_transics_id`,
-		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&driversMetrics).Error; err != nil {
-		return driversMetrics, errors.Wrap(err, database.ErrorDB)
+	GROUP BY demr.driver_transics_id
+	ORDER BY demr.driver_transics_id asc`,
+		start.Format("2006-01-02"), end.Format("2006-01-02"), driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
 	}
 
-	return driversMetrics, nil
+	return result, nil
 }
 
 //getCruiseControlRatio gets ratio of cruise control usage
-func getCruiseControlRatio(start time.Time) ([]DriverMetric, error) {
-	//build the endtime
-	end := getReportEndTime(start)
-
-	var driversMetrics []DriverMetric
+func getCruiseControlRatio(driversList []string, start, end time.Time) ([]DriverMetric, error) {
+	var result []DriverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, SUM(demr.distance_on_cruise_control) / SUM(demr.distance) as metric 
 	FROM driver_eco_monitor_reports demr
@@ -137,20 +142,19 @@ func getCruiseControlRatio(start time.Time) ([]DriverMetric, error) {
 	WHERE t.start_time >= ?
 	AND t.end_time <= ?
 	AND distance > 0
-	GROUP BY demr.driver_transics_id`,
-		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&driversMetrics).Error; err != nil {
-		return driversMetrics, errors.Wrap(err, database.ErrorDB)
+	AND t.driver_transics_id IN (?)
+	GROUP BY demr.driver_transics_id
+	ORDER BY demr.driver_transics_id asc`,
+		start.Format("2006-01-02"), end.Format("2006-01-02"), driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
 	}
 
-	return driversMetrics, nil
+	return result, nil
 }
 
-//getConsumption gets the consumption of a driver
-func getConsumption(start time.Time) ([]DriverMetric, error) {
-	//build the endtime
-	end := getReportEndTime(start)
-
-	var driversMetrics []DriverMetric
+//getFuelConsumption gets the fuel consumption of a driver
+func getFuelConsumption(driversList []string, start, end time.Time) ([]DriverMetric, error) {
+	var result []DriverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, SUM(fuel_consumption) as metric 
 	FROM driver_eco_monitor_reports demr
@@ -158,10 +162,12 @@ func getConsumption(start time.Time) ([]DriverMetric, error) {
 	ON demr.tour_id = t.id
 	WHERE t.start_time >= ?
 	AND t.end_time <= ?
-	GROUP BY demr.driver_transics_id`,
-		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&driversMetrics).Error; err != nil {
-		return driversMetrics, errors.Wrap(err, database.ErrorDB)
+	AND t.driver_transics_id IN (?)
+	GROUP BY demr.driver_transics_id
+	ORDER BY demr.driver_transics_id asc`,
+		start.Format("2006-01-02"), end.Format("2006-01-02"), driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
 	}
 
-	return driversMetrics, nil
+	return result, nil
 }
