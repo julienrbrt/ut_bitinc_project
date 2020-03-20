@@ -16,3 +16,4 @@ curl https://packages.microsoft.com/config/ubuntu/18.04/prod.list > /etc/apt/sou
 apt-get update
 ACCEPT_EULA=Y apt-get -y install msodbcsql17 r-base r-base-dev unixodbc unixodbc-dev libcurl4-openssl-dev libssl-dev libudunits2-dev libfontconfig1-dev libcairo2-dev libgdal-dev
 ln -sr odbcinst.ini ~/.odbcinst.ini
+chmod 777 -R /usr/local/lib/R/site-library
