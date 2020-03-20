@@ -5,7 +5,7 @@
     <title>Rijstijl analyse</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <style>
         html {
             overflow: hidden;
@@ -242,7 +242,7 @@
 <body>
     <div class="row full" style="padding-left: 10px;">
         <div class="col-sm-2 bolk full" style="padding-top: 5px;">
-            <img src="assets/logo.png" style="width: 70%;">
+            <img src="../logo.png" style="width: 70%;">
             <h3 style="overflow-wrap: break-word;">{{.FullName}}</h3>
             <p>person-id</p>
             <hr style="border: 5px solid #FECC00;">
@@ -254,7 +254,7 @@
             <h5>Bezochte landen</h5>
             <div class="row flagrow" style="padding-left: 10px;">
                 {{range .VisitedCountries}}
-                    <div class="flagcol"><img class="flag" src="assets/flags/{{.}}.svg"></div>
+                    <div class="flagcol"><img class="flag" src="../flags/{{.}}.svg"></div>
                 {{end}}
                 <br><br><br>
                 <h5>Persoonlijke graap van de week</h5>
@@ -265,11 +265,11 @@
             <div class="flexcontainer full">
                 <div class="card map">
                     <h2 class="bluetext">Route van afgelopen week</h2><img class="fill-parent"
-                        src="assets/r/driver_{{.TransicsID}}_maps.png">
+                        src="../graph/driver_{{.TransicsID}}_maps.png">
                 </div>
                 <div class="card card-wide">
                     <h2 class="bluetext">Verbruik in kilometers per liter</h2><img class="graph"
-                        src="assets/r/driver_{{.TransicsID}}_fuel_consumption.png">
+                        src="../graph/driver_{{.TransicsID}}_fuel_consumption.png">
                 </div>
                 <div class="inner-flex">
                     <div class="card text-item middle card-quarter top-left"><span>
@@ -290,13 +290,13 @@
                         </span></div>
                 </div>
                 <div class="card card-big">
-                    <h2 class="bluetext">Minuten stationair</h2><img class="graph" src="assets/r/driver_{{.TransicsID}}_idling.png">
+                    <h2 class="bluetext">Minuten stationair</h2><img class="graph" src="../graph/driver_{{.TransicsID}}_idling.png">
                 </div>
                 <div class="card card-half">
-                    <h2 class="bluetext">Bezigheden</h2><img class="graph" src="assets/r/driver_{{.TransicsID}}_activity.png">
+                    <h2 class="bluetext">Bezigheden</h2><img class="graph" src="../graph/driver_{{.TransicsID}}_activity.png">
                 </div>
                 <div class="card card-half">
-                    <h2 class="bluetext">Hoge snelheid (%)</h2><img class="graph" src="assets/r/driver_{{.TransicsID}}_high_speed.png">
+                    <h2 class="bluetext">Hoge snelheid (%)</h2><img class="graph" src="../graph/driver_{{.TransicsID}}_high_speed.png">
                 </div>
             </div>
         </div>

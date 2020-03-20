@@ -1,7 +1,9 @@
 package analysis
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -67,9 +69,20 @@ func runR(startTime, endTime string) error {
 }
 
 //printReport will save a template from disk
-func printReport(template, transicsID, startTime string) {
-	_ = fmt.Sprintf("driver_%s_report_%s.png", transicsID, startTime)
+func printReport(report bytes.Buffer, transicsID, startTime string) error {
+	reportName := fmt.Sprintf("driver_%s_report_%s", transicsID, startTime)
 
+	//get program path
+	wd, err := osext.ExecutableFolder()
+	if err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(path.Join(wd, "analysis", "assets", "report", reportName+".html"), report.Bytes(), 0644); err != nil {
+		log.Fatal(err)
+	}
+
+	return nil
 }
 
 //BuildDriverReport builds a report aimed at drivers
@@ -124,9 +137,9 @@ func BuildDriverReport() error {
 	}
 
 	//runR analysis
-	// if err := runR(startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
-	// 	return err
-	// }
+	if err := runR(startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+		return err
+	}
 
 	//store report template
 	tmpl, err := getReportTemplate()
@@ -179,10 +192,10 @@ func BuildDriverReport() error {
 
 		//fill in template
 		report := tmpl
-		err = report.Execute(os.Stdout, data)
+		buf := &bytes.Buffer{}
+		err = report.Execute(buf, data)
 
-		//TODO print template to png
-		break
+		printReport(*buf, data.TransicsID, startTime.Format("2006-01-02"))
 	}
 
 	return nil

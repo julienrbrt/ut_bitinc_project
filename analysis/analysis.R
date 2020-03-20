@@ -33,7 +33,7 @@ conn <- dbConnect(odbc(),
                  Port = 1433)
 
 #Set working directory
-setwd("analysis/assets/r")
+setwd("analysis/assets/graph")
 
 ###############
 #####GRAPH#####

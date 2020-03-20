@@ -6,7 +6,7 @@ apt-get -y install build-essential curl
 # Go dependencies
 echo "Installing Go depencencies..."
 apt-get -y install snapd
-snap install Go
+snap install go
 
 # R dependencies
 echo "Installing R dependencies..."
