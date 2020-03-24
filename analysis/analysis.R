@@ -80,7 +80,7 @@ buildMap = function(conn, driverTransicsID, startTime, endTime) {
       opacity = 0.2
     )
   
-  graph_name <-  paste0("driver_", driverTransicsID, "_maps.png")
+  graph_name <-  paste0("driver_", driverTransicsID, "_maps_", endTime, ".png")
   mapshot(map, file = graph_name)
 }
 
@@ -112,7 +112,7 @@ buildIdling = function(conn, driverTransicsID, startTime, endTime) {
     theme(axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
-  graph_name <-  paste0("driver_", driverTransicsID, "_idling.png")
+  graph_name <-  paste0("driver_", driverTransicsID, "_idling_", endTime, ".png")
   ggsave(graph_name)
 }
 
@@ -143,7 +143,7 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
     theme(axis.text.x = element_text(angle = 75, vjust = 0.5))
   
   #save it to file
-  graph_name <-  paste0("driver_", driverTransicsID, "_fuel_consumption.png")
+  graph_name <-  paste0("driver_", driverTransicsID, "_fuel_consumption_", endTime, ".png")
   ggsave(graph_name)
 }
 
@@ -176,7 +176,7 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
     theme(axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
-  graph_name <-  paste0("driver_", driverTransicsID, "_high_speed.png")
+  graph_name <-  paste0("driver_", driverTransicsID, "_high_speed_", endTime, ".png")
   ggsave(graph_name)
 }
 
@@ -205,7 +205,7 @@ buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
   tt3 <- ttheme_minimal(core=list(bg_params = list(fill = blues9[4:1], col=NA), fg_params=list(fontface=3)),colhead=list(fg_params=list(col="#003580", fontface=4L)), rowhead=list(fg_params=list(col="#003580", fontface=3L)), base_size = 28)
   
   #save it to file
-  graph_name <-  paste0("driver_", driverTransicsID, "_activity.png")
+  graph_name <-  paste0("driver_", driverTransicsID, "_activity_", endTime, ".png")
   png(graph_name)
   tableGrob(data, cols = "Total Duration", theme = tt3) %>%
     grid.arrange()

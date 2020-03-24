@@ -31,16 +31,11 @@ type DriverReportData struct {
 	FuelConsumption  string
 	VisitedCountries []string
 	PersonalJoke     string
+	EndTime          string
 }
 
 //getReportTemplate gets the template
-func getReportTemplate() (*template.Template, error) {
-	//get program path
-	wd, err := osext.ExecutableFolder()
-	if err != nil {
-		return &template.Template{}, err
-	}
-
+func getReportTemplate(wd string) (*template.Template, error) {
 	//path of templates used to build the driver report
 	var reportPath = path.Join("analysis", "driver_report.html")
 
@@ -53,7 +48,22 @@ func getReportTemplate() (*template.Template, error) {
 }
 
 //runR launch the R analysis
-func runR(startTime, endTime string) error {
+func runR(wd, startTime, endTime string) error {
+	//verify that analysis has not already been performed (i.e. no files saved with an endtime)
+	graph, err := os.Open(path.Join("analysis", "assets", "graph"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//get the names in only one slice
+	names, err := graph.Readdirnames(0)
+	for _, f := range names {
+		if strings.Contains(f, endTime) {
+			log.Println("Skipping analysis as graph are already generated.")
+			return nil
+		}
+	}
+
 	//path of the analysis
 	analysis := path.Join("analysis", "analysis.R")
 
@@ -70,28 +80,11 @@ func runR(startTime, endTime string) error {
 	return nil
 }
 
-//printReport will save a template from disk
-func printReport(report bytes.Buffer, transicsID, startTime string) error {
-	reportName := fmt.Sprintf("driver_%s_report_%s", transicsID, startTime)
-
-	//get program path
-	wd, err := osext.ExecutableFolder()
-	if err != nil {
-		return err
-	}
-
-	if err := ioutil.WriteFile(path.Join(wd, "analysis", "assets", "report", reportName+".html"), report.Bytes(), 0644); err != nil {
-		log.Fatal(err)
-	}
-
-	return nil
-}
-
 //BuildDriverReport builds a report aimed at drivers
 func BuildDriverReport() error {
 	log.Print("Building drivers reports...")
 
-	//reportRange defines the number of days a report contains -  according to the .env file
+	//reportRange defines the number of days a report contains - according to the .env file
 	reportRange, err := strconv.Atoi(os.Getenv("REPORT_RANGE"))
 	if err != nil {
 		// a report range is necessary, no recovery possible
@@ -107,61 +100,73 @@ func BuildDriverReport() error {
 	if err != nil {
 		return err
 	}
-
 	//get list of which driver report to build
 	var driverList []string
 	for _, driver := range drivenKm {
 		driverList = append(driverList, driver.TransicsID)
 	}
+	//get metrics
 	driverName, err := getDriverName(driverList)
 	if err != nil {
 		return err
 	}
+	//get metrics
 	personID, err := getPersonID(driverList)
 	if err != nil {
 		return err
 	}
+	//get metrics
 	truckDriven, err := getTruckDriven(driverList, startTime, endTime)
 	if err != nil {
 		return err
 	}
+	//get metrics
 	panicBrakes, err := getTotalPanicBrakes(driverList, startTime, endTime)
 	if err != nil {
 		return err
 	}
+	//get metrics
 	vistedCountries, err := getVisitedCountries(driverList, startTime, endTime)
 	if err != nil {
 		return err
 	}
+	//get metrics
 	cruiseControl, err := getCruiseControlRatio(driverList, startTime, endTime)
 	if err != nil {
 		return err
 	}
+	//get metrics
 	fuelConsumption, err := getFuelConsumption(driverList, startTime, endTime)
 	if err != nil {
 		return err
 	}
 
-	//runR analysis
-	//TODO detect if image already exists and skip
-	// if err := runR(startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
-	// 	return err
-	// }
-
-	//store report template
-	tmpl, err := getReportTemplate()
+	//get program path
+	wd, err := osext.ExecutableFolder()
 	if err != nil {
 		return err
 	}
 
-	//Create report based on someone who drove
-	//Assumes that all request are sorted
+	//runR analysis
+	if err := runR(wd, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+		return err
+	}
+
+	//store report template
+	tmpl, err := getReportTemplate(wd)
+	if err != nil {
+		return err
+	}
+
+	//Fill in template -- Assumes that all results are sorted
 	for i, driverDrivenKm := range drivenKm {
 		var data DriverReportData
 
 		//assign metric to report data
 		data.DrivenKm = driverDrivenKm.Metric
 		data.TransicsID = driverDrivenKm.TransicsID
+		//used to get the right image
+		data.EndTime = endTime.Format("2006-01-02")
 
 		if driverName[i].TransicsID == data.TransicsID {
 			data.FullName = strings.ToUpper(driverName[i].Metric)
@@ -208,12 +213,11 @@ func BuildDriverReport() error {
 		buf := &bytes.Buffer{}
 		err = report.Execute(buf, data)
 
-		err := printReport(*buf, data.TransicsID, startTime.Format("2006-01-02"))
-		if err != nil {
-			return err
+		//save a template to disk
+		reportName := fmt.Sprintf("driver_%s_report_%s", data.TransicsID, endTime.Format("2006-01-02"))
+		if err := ioutil.WriteFile(path.Join(wd, "analysis", "assets", "report", reportName+".html"), buf.Bytes(), 0644); err != nil {
+			log.Fatal(err)
 		}
-
-		//TODO delete report content (OR reeuse existing images)
 	}
 
 	return nil
