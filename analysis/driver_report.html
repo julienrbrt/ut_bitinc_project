@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
     <style>
         html,
         body {
@@ -43,7 +44,10 @@
         }
 
         h5 {
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: normal;
+            padding-top: 5px;
+            padding-bottom: 5px;
         }
 
         .card-title {
@@ -77,7 +81,8 @@
         }
 
         .card-small {
-            padding: 25%;
+            padding-top: 30%;
+            padding-bottom: 30%;
             text-align: center;
         }
 
@@ -104,13 +109,13 @@
         <img class="logo" src="../logo.png">
         <h3>{{.FullName}}</h3>
         <p>{{.PersonID}}</p>
-        <hr style="border: 5px solid #FECC00;">
-        <h5>Je hebt gereden in:</h5>
+        <hr style="border: 0.25rem solid #FECC00;">
+        <h5><i class="fas fa-truck-moving fa-md"></i> Je hebt gereden in</h5>
         {{range .TruckDriven}}
         <p>{{.}}</p>
         {{end}}
 
-        <h5>Bezochte landen</h5>
+        <h5><i class="fas fa-globe-europe fa-md"></i> Bezochte landen</h5>
         <div class="row justify-content-md-center">
             {{range .VisitedCountries}}
             <div class="col col-lg-4">
@@ -118,7 +123,7 @@
             </div>
             {{end}}
         </div>
-        <h5>Persoonlijke grap van de week</h5>
+        <h5><i class="fas fa-smile-wink fa-md"></i> Grap van de week</h5>
         <p>{{.PersonalJoke}}</p>
     </div>
 
@@ -135,12 +140,12 @@
                 <div class="row">
                     <div class="col-6 col-md-6">
                         <div class="card card-small">
-                            <h1 class="card-title med-text">{{.PanicBrakes}}</h1>
+                            <h1 class="card-title med-text">{{.PanicBrakes}}x</h1>
                             <p class="text">Hard geremd</p>
                         </div>
                         <div class="card card-small">
                             <h1 class="card-title med-text">{{.CruiseControl}}</h1>
-                            <p class="text">Cruise Control gebruik (%)</p>
+                            <p class="text">Cruise Control gebruik</p>
                         </div>
                     </div>
                     <div class="col-6 col-md-6">
@@ -149,8 +154,8 @@
                             <p class="text">Kilometer gereden</p>
                         </div>
                         <div class="card card-small">
-                            <h1 class="card-title med-text">{{.FuelConsumption}}</h1>
-                            <p class="text">Liter diesel verbruikt</p>
+                            <h1 class="card-title med-text">{{.FuelConsumption}}L</h1>
+                            <p style="padding-bottom: 5px" class="text">Diesel verbruikt</p>
                         </div>
                     </div>
                 </div>

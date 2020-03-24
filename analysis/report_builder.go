@@ -59,7 +59,7 @@ func runR(wd, startTime, endTime string) error {
 	names, err := graph.Readdirnames(0)
 	for _, f := range names {
 		if strings.Contains(f, endTime) {
-			log.Println("Skipping analysis as graph are already generated.")
+			log.Println("Skipping analysis as graphs are already generated.")
 			return nil
 		}
 	}
@@ -107,8 +107,9 @@ func runPhantom(wd, reportPath string) error {
 		return errors.Wrap(err, "phantomjs failed")
 	}
 
-	return nil
+	log.Printf("Report generated in %s.png\n", reportPath)
 
+	return nil
 }
 
 //BuildDriverReport builds a report aimed at drivers
@@ -219,17 +220,16 @@ func BuildDriverReport() error {
 
 		for _, country := range vistedCountries {
 			if country.TransicsID == data.TransicsID {
-				data.VisitedCountries = append(data.VisitedCountries, country.Metric)
+				if country.Metric != "" {
+					data.VisitedCountries = append(data.VisitedCountries, country.Metric)
+				}
 			}
 		}
 
 		if cruiseControl[i].TransicsID == data.TransicsID {
 			value, _ := strconv.ParseFloat(cruiseControl[i].Metric, 32)
-			if value*100 < 1 {
-				data.CruiseControl = "no."
-			} else {
-				data.CruiseControl = fmt.Sprintf("%.2f", math.Round(value*100))
-			}
+			//format as 90.56%
+			data.CruiseControl = fmt.Sprintf("%.2f%%", math.Round(value*100))
 		}
 
 		if fuelConsumption[i].TransicsID == data.TransicsID {
