@@ -108,7 +108,7 @@ buildIdling = function(conn, driverTransicsID, startTime, endTime) {
   #building histogram
   idling %>% ggplot(aes(x=week_number, y=idling)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    labs(x = "Week nummer", y = "Verhouding stationair draaien tov totale rijtijd (%)") +
+    labs(x = "", y = "Verhouding stationair draaien tov totale rijtijd (%)") +
     theme(axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
@@ -172,7 +172,7 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
   #building histogram
   speed %>% ggplot(aes(x=week_number, y=speed_average)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    labs(x = "Week nummer", y = "Gemiddelde sneilheid") +
+    labs(x = "", y = "Gemiddelde sneilheid") +
     theme(axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
@@ -239,10 +239,8 @@ getReport = function(startTime, endTime) {
 
 for (driverTransicsID in getReport(args[1], args[2])){
   buildMap(conn, driverTransicsID, args[1], args[2])
-  buildIdling(conn, driverTransicsID, args[1], args[2])
+  buildIdling(conn, driverTransicsID, args[1] - 7, args[2])
   buildFuelConsumption(conn, driverTransicsID, args[1] - 7, args[2])
   buildHighSpeed(conn, driverTransicsID, args[1] - 7, args[2])
   buildActivityList(conn, driverTransicsID, args[1], args[2])
 }
-
-print("all done :)")

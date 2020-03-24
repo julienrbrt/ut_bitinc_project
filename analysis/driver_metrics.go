@@ -48,6 +48,21 @@ func getDriverName(driversList []string) ([]DriverMetric, error) {
 	return result, nil
 }
 
+//getPersonID gets a person-id
+func getPersonID(driversList []string) ([]DriverMetric, error) {
+	var result []DriverMetric
+	if err := database.DB.Raw(`
+	SELECT transics_id, person_id as metric
+	FROM drivers
+	WHERE transics_id IN (?)
+	ORDER BY transics_id asc`,
+		driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
+	}
+
+	return result, nil
+}
+
 //getTruckDriven gets the trucks that a driver has been driving
 func getTruckDriven(driversList []string, start, end time.Time) ([]DriverMetric, error) {
 	var result []DriverMetric

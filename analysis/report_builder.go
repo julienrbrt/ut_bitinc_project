@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 	"tx2db/util"
@@ -21,6 +22,7 @@ import (
 //DriverReportData contains the data of a report
 type DriverReportData struct {
 	FullName         string
+	PersonID         string
 	TransicsID       string
 	TruckDriven      []string
 	DrivenKm         string
@@ -115,6 +117,10 @@ func BuildDriverReport() error {
 	if err != nil {
 		return err
 	}
+	personID, err := getPersonID(driverList)
+	if err != nil {
+		return err
+	}
 	truckDriven, err := getTruckDriven(driverList, startTime, endTime)
 	if err != nil {
 		return err
@@ -137,9 +143,10 @@ func BuildDriverReport() error {
 	}
 
 	//runR analysis
-	if err := runR(startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
-		return err
-	}
+	//TODO detect if image already exists and skip
+	// if err := runR(startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+	// 	return err
+	// }
 
 	//store report template
 	tmpl, err := getReportTemplate()
@@ -157,14 +164,17 @@ func BuildDriverReport() error {
 		data.TransicsID = driverDrivenKm.TransicsID
 
 		if driverName[i].TransicsID == data.TransicsID {
-			data.FullName = driverName[i].Metric
+			data.FullName = strings.ToUpper(driverName[i].Metric)
+		}
+
+		if personID[i].TransicsID == data.TransicsID {
+			data.PersonID = personID[i].Metric
 		}
 
 		for _, truck := range truckDriven {
-			if truck.TransicsID != data.TransicsID {
-				break
+			if truck.TransicsID == data.TransicsID {
+				data.TruckDriven = append(data.TruckDriven, truck.Metric)
 			}
-			data.TruckDriven = append(data.TruckDriven, truck.Metric)
 		}
 
 		if panicBrakes[i].TransicsID == data.TransicsID {
@@ -172,15 +182,18 @@ func BuildDriverReport() error {
 		}
 
 		for _, country := range vistedCountries {
-			if country.TransicsID != data.TransicsID {
-				break
+			if country.TransicsID == data.TransicsID {
+				data.VisitedCountries = append(data.VisitedCountries, country.Metric)
 			}
-			data.VisitedCountries = append(data.VisitedCountries, country.Metric)
 		}
 
 		if cruiseControl[i].TransicsID == data.TransicsID {
 			value, _ := strconv.ParseFloat(cruiseControl[i].Metric, 32)
-			data.CruiseControl = fmt.Sprintf("%.2f", math.Round(value*100))
+			if value*100 < 1 {
+				data.CruiseControl = "no."
+			} else {
+				data.CruiseControl = fmt.Sprintf("%.2f", math.Round(value*100))
+			}
 		}
 
 		if fuelConsumption[i].TransicsID == data.TransicsID {
@@ -195,7 +208,12 @@ func BuildDriverReport() error {
 		buf := &bytes.Buffer{}
 		err = report.Execute(buf, data)
 
-		printReport(*buf, data.TransicsID, startTime.Format("2006-01-02"))
+		err := printReport(*buf, data.TransicsID, startTime.Format("2006-01-02"))
+		if err != nil {
+			return err
+		}
+
+		//TODO delete report content (OR reeuse existing images)
 	}
 
 	return nil

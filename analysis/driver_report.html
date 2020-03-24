@@ -6,26 +6,35 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
     <style>
-        html {
-            overflow: hidden;
-            width: 1536px;
-            height: 722.4px;
-        }
-
-        body,
-        .full {
-            overflow: hidden;
-            height: 100%;
-        }
-
+        html,
         body {
-            background-color: #ddd;
+            background-color: #eee;
+            font-family: 'Roboto';
         }
 
-        .bolk {
-            background: #004A2C;
+        .sidenav {
+            height: 100%;
+            width: 260px;
+            position: fixed;
+            z-index: 1;
+            /* Stay on top */
+            top: 0;
+            left: 0;
+            background-color: #004A2C;
+            /* Disable horizontal scroll */
+            overflow-x: hidden;
+            padding-top: 20px;
+            padding-right: 5px;
+            padding-left: 5px;
             color: #FECC00;
+        }
+
+        .main {
+            /* Same as the width of the sidebar + 20px */
+            margin-left: 280px;
+            padding: 0px 10px;
         }
 
         p {
@@ -34,269 +43,146 @@
         }
 
         h5 {
-            font-weight: bold;
-            margin-bottom: 0px;
+            font-weight: 600;
         }
 
-        .bluetext {
+        .card-title {
             color: #003580;
-            margin: 0;
+            margin-top: 2px;
+            margin-bottom: 2px;
             text-align: center;
             font-weight: 550;
-        }
-
-        .big-text {
-            font-size: 60pt;
+            font-family: 'Roboto';
         }
 
         .med-text {
-            font-size: 45pt;
+            font-size: 4.5rem;
         }
 
-        .content {
-            padding-left: 11px;
-            padding-top: 9px;
-        }
-
-        .flagcol {
-            float: left;
-            width: 20%;
-            padding: 5px;
-        }
-
-        .flagrow::after {
-            content: "";
-            clear: both;
-            display: table;
+        .text {
+            color: #003580;
         }
 
         .flag {
-            width: 100%;
             max-height: 40px;
         }
 
-
-        .flexcontainer {
-            display: flex;
-            flex-wrap: wrap;
-            flex-direction: column;
-            align-items: flex-start;
-            align-content: space-around;
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: -ms-flexbox;
-            display: flex;
-            -webkit-flex-flow: column wrap;
-            -ms-flex-flow: column wrap;
-            flex-flow: column wrap;
-        }
-
         .card {
-            background: white;
-            box-shadow: 6px 6px 6px grey;
-            margin: 10px;
+            background: #fff;
+            box-shadow: 6px 6px 6px #ddd;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            overflow: hidden;
         }
 
-        .fill-parent {
-            max-height: 100%;
-            max-width: 100%;
-        }
-
-        .text-item {
-            min-width: 10%;
-            min-height: 10%;
-            padding: 20px;
-        }
-
-        .middle {
-            /* absolute middle alignment */
-            /* Internet Explorer 10 */
-            display: -ms-flexbox;
-            -ms-flex-pack: center;
-            -ms-flex-align: center;
-
-            /* Firefox */
-            display: -moz-box;
-            -moz-box-pack: center;
-            -moz-box-align: center;
-
-            /* Safari, Opera, and Chrome */
-            display: -webkit-box;
-            -webkit-box-pack: center;
-            -webkit-box-align: center;
-
-            /* W3C */
-            display: box;
-            box-pack: center;
-            box-align: center;
-        }
-
-        .map {
-            width: 475px;
-            height: 389.05px;
-        }
-
-        .card-wide {
-            width: 475px;
-            height: 275px;
-            padding: 0 !important;
-        }
-
-        .card-big {
-            width: 351.813px;
-            height: 275px;
-            padding: 0 !important;
-        }
-
-        .card-medhigh {
-            width: 351.813px;
-            height: 184.525px;
-            padding: 0 !important;
-        }
-
-        .card-fifth {
-            width: 351.813px;
-            height: 120.8px;
-            padding: 0 !important;
-        }
-
-        .card-fourth {
-            width: 351.813px;
-            height: 156px;
-            padding: 0 !important;
-        }
-
-        .card-third {
-            width: 351.813px;
-            height: 214.675px;
-            padding: 0 !important;
-        }
-
-        .card-half {
-            width: 351.813px;
-            height: 332px;
-            padding: 0 !important;
-        }
-
-        .card-full {
-            width: 351.813px;
-            height: 644px;
-            padding: 0 !important;
-        }
-
-        .card-quarter {
-            width: 165px;
-            height: 184.525px;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .inner-flex {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-evenly;
-            align-items: flex-start;
-            align-content: space-around;
-            width: 351.813px;
-            height: 389.05px;
-            margin: 10px;
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: -ms-flexbox;
-            display: flex;
-            -webkit-flex-flow: row wrap;
-            -ms-flex-flow: row wrap;
-            flex-flow: row wrap;
-        }
-
-        .top-left {
-            margin-right: 10px !important;
-            margin-bottom: 10px !important;
-        }
-
-        .top-right {
-            margin-left: 10px !important;
-            margin-bottom: 10px !important;
-        }
-
-        .bottom-left {
-            margin-right: 10px !important;
-            margin-top: 10px !important;
-        }
-
-        .bottom-right {
-            margin-left: 10px !important;
-            margin-top: 10px !important;
+        .card-small {
+            padding: 25%;
+            text-align: center;
         }
 
         .graph {
-            max-width: 100%;
-            height: calc(100% - 33px);
+            width: 80%;
             display: block;
             margin-left: auto;
             margin-right: auto;
+        }
+
+        .map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .logo {
+            width: 70%;
         }
     </style>
 </head>
 
 <body>
-    <div class="row full" style="padding-left: 10px;">
-        <div class="col-sm-2 bolk full" style="padding-top: 5px;">
-            <img src="../logo.png" style="width: 70%;">
-            <h3 style="overflow-wrap: break-word;">{{.FullName}}</h3>
-            <p>person-id</p>
-            <hr style="border: 5px solid #FECC00;">
-            <h5>Je hebt gereden in:</h5>
-            {{range .TruckDriven}}
-            <p style="white-space: pre;">{{.}}</p>
+    <div class="sidenav">
+        <img class="logo" src="../logo.png">
+        <h3>{{.FullName}}</h3>
+        <p>{{.PersonID}}</p>
+        <hr style="border: 5px solid #FECC00;">
+        <h5>Je hebt gereden in:</h5>
+        {{range .TruckDriven}}
+        <p>{{.}}</p>
+        {{end}}
+
+        <h5>Bezochte landen</h5>
+        <div class="row justify-content-md-center">
+            {{range .VisitedCountries}}
+            <div class="col col-lg-4">
+                <img class="flag" src="../flags/{{.}}.svg">
+            </div>
             {{end}}
-            <br>
-            <h5>Bezochte landen</h5>
-            <div class="row flagrow" style="padding-left: 10px;">
-                {{range .VisitedCountries}}
-                    <div class="flagcol"><img class="flag" src="../flags/{{.}}.svg"></div>
-                {{end}}
-                <br><br><br>
-                <h5>Persoonlijke graap van de week</h5>
-                <p style="margin-right: 5px;">{{.PersonalJoke}}</p>
+        </div>
+        <h5>Persoonlijke grap van de week</h5>
+        <p>{{.PersonalJoke}}</p>
+    </div>
+
+    <div class="main">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 style="padding-bottom: 5px" class="card-title">Route van afgelopen week</h2>
+                    <img class="graph map" src="../graph/driver_{{.TransicsID}}_maps.png">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="col-6 col-md-6">
+                        <div class="card card-small">
+                            <h1 class="card-title med-text">{{.PanicBrakes}}</h1>
+                            <p class="text">Hard geremd</p>
+                        </div>
+                        <div class="card card-small">
+                            <h1 class="card-title med-text">{{.CruiseControl}}</h1>
+                            <p class="text">Cruise Control gebruik (%)</p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <div class="card card-small">
+                            <h1 class="card-title med-text">{{.DrivenKm}}</h1>
+                            <p class="text">Kilometer gereden</p>
+                        </div>
+                        <div class="card card-small">
+                            <h1 class="card-title med-text">{{.FuelConsumption}}</h1>
+                            <p class="text">Liter diesel verbruikt</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 class="card-title">Bezigheden</h2>
+                    <img class="graph" src="../graph/driver_{{.TransicsID}}_activity.png">
+                </div>
             </div>
         </div>
-        <div class="col-sm-10 full content">
-            <div class="flexcontainer full">
-                <div class="card map">
-                    <h2 class="bluetext">Route van afgelopen week</h2><img class="fill-parent"
-                        src="../graph/driver_{{.TransicsID}}_maps.png">
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 class="card-title">Verbruik in kilometers per liter</h2>
+                    <img class="graph" src="../graph/driver_{{.TransicsID}}_fuel_consumption.png">
                 </div>
-                <div class="card card-wide">
-                    <h2 class="bluetext">Verbruik in kilometers per liter</h2><img class="graph"
-                        src="../graph/driver_{{.TransicsID}}_fuel_consumption.png">
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 class="card-title">Minuten stationair</h2>
+                    <img class="graph" src="../graph/driver_{{.TransicsID}}_idling.png">
                 </div>
-                <div class="inner-flex">
-                    <div class="card text-item middle card-quarter top-left"><span>
-                            <h1 class="bluetext med-text">{{.PanicBrakes}}</h1>
-                            <h5 class="bluetext">Hard geremd</h5>
-                        </span></div>
-                    <div class="card text-item middle card-quarter top-right"><span>
-                            <h1 class="bluetext med-text">{{.CruiseControl}}</h1>
-                            <h5 class="bluetext">Cruise Control gebruik (%)</h5>
-                        </span></div>
-                    <div class="card text-item middle card-quarter bottom-left"><span>
-                            <h1 class="bluetext med-text">{{.DrivenKm}}</h1>
-                            <h5 class="bluetext">Kilometer gereden</h5>
-                        </span></div>
-                    <div class="card text-item middle card-quarter bottom-right"><span>
-                            <h1 class="bluetext med-text">{{.FuelConsumption}}</h1>
-                            <h5 class="bluetext">Liter diesel verbruikt</h5>
-                        </span></div>
-                </div>
-                <div class="card card-big">
-                    <h2 class="bluetext">Minuten stationair</h2><img class="graph" src="../graph/driver_{{.TransicsID}}_idling.png">
-                </div>
-                <div class="card card-half">
-                    <h2 class="bluetext">Bezigheden</h2><img class="graph" src="../graph/driver_{{.TransicsID}}_activity.png">
-                </div>
-                <div class="card card-half">
-                    <h2 class="bluetext">Hoge snelheid (%)</h2><img class="graph" src="../graph/driver_{{.TransicsID}}_high_speed.png">
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 class="card-title">Hoge snelheid (%)</h2>
+                    <img class="graph" src="../graph/driver_{{.TransicsID}}_high_speed.png">
                 </div>
             </div>
         </div>
