@@ -4,3 +4,4 @@
 .Ruserdata
 assets/graph/driver_*
 assets/report/driver_*
+html2png_gen.js

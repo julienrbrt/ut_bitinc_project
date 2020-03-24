@@ -54,7 +54,7 @@ Generate the report manually
 
 ### Architechture
 
-* ```analysis``` contains the driver analysis. Graphs are built with R and the different metrics in Go. The template of the report is written in `.html`.
+* ```analysis``` contains the driver analysis. Graphs are built with R and the different metrics in Go. The template of the report is written in `.html`. The report are then converted to a .png thanks to `phantomjs`.
 * ```cmd``` are the commands accessible in `tx2db`
 * ```config```  are configuration files: please read [config/README.md](config/README.md).
 * ```txtango``` implements the TX-TANGO API

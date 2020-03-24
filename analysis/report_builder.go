@@ -80,6 +80,37 @@ func runR(wd, startTime, endTime string) error {
 	return nil
 }
 
+//runPhamtom runs phantomjs to take a convert a html template to png
+func runPhantom(wd, reportPath string) error {
+	//path of the html2png.js
+	screenshotScript := path.Join("analysis", "html2png")
+
+	//fill in template
+	tmpl, err := template.ParseFiles(path.Join(wd, screenshotScript+".js"))
+	if err != nil {
+		return err
+	}
+	buf := &bytes.Buffer{}
+	err = tmpl.Execute(buf, reportPath)
+
+	if err := ioutil.WriteFile(screenshotScript+"_gen.js", buf.Bytes(), 0644); err != nil {
+		log.Fatal(err)
+	}
+
+	//run phantomjs
+	phantom := exec.Command("phantomjs", path.Join(wd, screenshotScript+"_gen.js"))
+	//display error and output
+	phantom.Stdout = os.Stdout
+	phantom.Stderr = os.Stderr
+
+	if err := phantom.Run(); err != nil {
+		return errors.Wrap(err, "phantomjs failed")
+	}
+
+	return nil
+
+}
+
 //BuildDriverReport builds a report aimed at drivers
 func BuildDriverReport() error {
 	log.Print("Building drivers reports...")
@@ -213,11 +244,17 @@ func BuildDriverReport() error {
 		buf := &bytes.Buffer{}
 		err = report.Execute(buf, data)
 
-		//save a template to disk
-		reportName := fmt.Sprintf("driver_%s_report_%s", data.TransicsID, endTime.Format("2006-01-02"))
-		if err := ioutil.WriteFile(path.Join(wd, "analysis", "assets", "report", reportName+".html"), buf.Bytes(), 0644); err != nil {
+		//save template to disk
+		reportPath := path.Join(wd, "analysis", "assets", "report", fmt.Sprintf("driver_%s_report_%s", data.TransicsID, endTime.Format("2006-01-02")))
+		if err := ioutil.WriteFile(reportPath+".html", buf.Bytes(), 0644); err != nil {
 			log.Fatal(err)
 		}
+
+		//save template to png
+		if err := runPhantom(wd, reportPath); err != nil {
+			log.Fatal(err)
+		}
+
 	}
 
 	return nil
