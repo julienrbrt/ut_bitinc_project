@@ -119,19 +119,8 @@ func runPhantom(wd, reportPath string) error {
 }
 
 //BuildDriverReport builds a report aimed at drivers
-func BuildDriverReport(ignoreCache bool) error {
+func BuildDriverReport(ignoreCache bool, startTime, endTime time.Time) error {
 	log.Print("Building drivers reports...")
-
-	//reportRange defines the number of days a report contains - according to the .env file
-	reportRange, err := strconv.Atoi(os.Getenv("REPORT_RANGE"))
-	if err != nil {
-		// a report range is necessary, no recovery possible
-		panic(err)
-	}
-
-	//get date
-	startTime := time.Now().AddDate(0, 0, -7)
-	endTime := startTime.AddDate(0, 0, reportRange)
 
 	//get metrics
 	drivenKm, err := getDrivenKm(startTime, endTime)

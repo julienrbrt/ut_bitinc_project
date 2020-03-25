@@ -165,7 +165,7 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
         select(tour_id, start_time, fuel_consumption, speed_average, distance),
       by = c("id" = "tour_id")
     ) %>%
-    filter(distance > 0 && fuel_consumption > 0 && speed_average > 0) %>%
+    filter(distance > 0 && speed_average > 0) %>%
     collect()
   
   #convert the time to R date object (Warning, we are losing the actual time)

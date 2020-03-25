@@ -26,7 +26,7 @@ var importCmd = &cobra.Command{
 		//connect to database
 		err = database.InitDB()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		defer database.DB.Close()
 
