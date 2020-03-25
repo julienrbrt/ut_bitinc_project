@@ -35,7 +35,7 @@ Install the required dependencies (on a Ubuntu/Debian based distribution) by run
 
 ### Usage
 
-The efficient way to import or generate report periodically data is to use **CRON**.  
+The efficient way to import or generate report periodically data is to use **CRON** (for instance every 4h for the importer and every wednesday for the analysis).  
 This can as well be done manually using `tx2db` commands.
 
 An exaustive list of available commands can be found by running `tx2db --help`.

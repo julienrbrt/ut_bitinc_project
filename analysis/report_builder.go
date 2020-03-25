@@ -119,7 +119,7 @@ func runPhantom(wd, reportPath string) error {
 }
 
 //BuildDriverReport builds a report aimed at drivers
-func BuildDriverReport(ignoreCache bool, startTime, endTime time.Time) error {
+func BuildDriverReport(ignoreCache, skipSendMail bool, startTime, endTime time.Time) error {
 	log.Print("Building drivers reports...")
 
 	//get metrics
@@ -243,7 +243,7 @@ func BuildDriverReport(ignoreCache bool, startTime, endTime time.Time) error {
 		err = report.Execute(buf, data)
 
 		//save template to disk
-		genReportPath := path.Join(wd, ReportPath, fmt.Sprintf("driver_%s_report_%s", data.TransicsID, endTime.Format("2006-01-02")))
+		genReportPath := path.Join(wd, ReportPath, fmt.Sprintf("driver_%s_report_%s", data.PersonID, endTime.Format("2006-01-02")))
 		if err := ioutil.WriteFile(genReportPath+".html", buf.Bytes(), 0644); err != nil {
 			log.Fatal(err)
 		}
@@ -253,6 +253,12 @@ func BuildDriverReport(ignoreCache bool, startTime, endTime time.Time) error {
 			log.Fatal(err)
 		}
 
+		//send analysis mail
+		if !skipSendMail {
+			if err := util.SendReportMail(genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02"), data.PersonID); err != nil {
+				log.Print("ERROR: Mail not sent.")
+			}
+		}
 	}
 
 	return nil

@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/jinzhu/gorm v1.9.12
 	github.com/joho/godotenv v1.3.0
+	github.com/jordan-wright/email v0.0.0-20200322182553-8eef2508c362
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect

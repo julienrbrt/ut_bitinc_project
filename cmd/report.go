@@ -13,6 +13,8 @@ import (
 var (
 	//ignoreCache will ignore the already generated graph and generate them agaub
 	ignoreCache bool
+	//skipSendMail permits to do not send reports per mail
+	skipSendMail bool
 	//startTime define the startTime of the report
 	startTime string
 	//reportRange defines the number of days a report contains
@@ -31,8 +33,13 @@ var genReportCmd = &cobra.Command{
 
 		//get report date
 		if startTime == "" {
-			//-8 days so we do not include the date of today
-			reportTime = time.Now().AddDate(0, 0, -8)
+			//get report from week back
+			reportTime = time.Now().AddDate(0, 0, -7)
+
+			// iterate back to Monday
+			for reportTime.Weekday() != time.Monday {
+				reportTime = reportTime.AddDate(0, 0, -1)
+			}
 		} else {
 			//parse begin and end date into time.Time
 			reportTime, err = time.Parse("2006-01-02", startTime)
@@ -49,7 +56,7 @@ var genReportCmd = &cobra.Command{
 		}
 		defer database.DB.Close()
 
-		err = analysis.BuildDriverReport(ignoreCache, reportTime, reportTime.AddDate(0, 0, reportRange))
+		err = analysis.BuildDriverReport(ignoreCache, skipSendMail, reportTime, reportTime.AddDate(0, 0, reportRange))
 		if err != nil {
 			return err
 		}
@@ -61,8 +68,10 @@ var genReportCmd = &cobra.Command{
 func init() {
 	//--ignoreCache flag
 	genReportCmd.PersistentFlags().BoolVar(&ignoreCache, "ignoreCache", false, "Ignore already generated graphs")
+	//--skipSendMail flag
+	genReportCmd.PersistentFlags().BoolVar(&skipSendMail, "skipSendMail", false, "Do not send a mail when generating reports")
 	//--startTime flags, define the startTime of the report
-	genReportCmd.PersistentFlags().StringVar(&startTime, "startTime", "", "Define the start time of a report (default a week ago)")
+	genReportCmd.PersistentFlags().StringVar(&startTime, "startTime", "", "Define the start time of a report (default monday, a week ago)")
 	//--reportRange flag, default to 7 days
 	genReportCmd.PersistentFlags().IntVar(&reportRange, "reportRange", 7, "Define a report range")
 	rootCmd.AddCommand(genReportCmd)
