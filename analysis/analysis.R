@@ -65,7 +65,7 @@ buildMap = function(conn, driverTransicsID, startTime, endTime) {
   destinations <- tbl(conn, "tours") %>%
     filter(driver_transics_id == driverTransicsID) %>%
     filter(start_time >= startTime && end_time <= endTime) %>%
-    select(id, destination_latitude, destination_longitude) %>%
+    select(id) %>%
     # join tours and activities to connect driver _ids to activities
     inner_join(tbl(conn,"truck_activity_reports") %>% 
                filter(start_time>= startTime && end_time <= endTime) %>%
@@ -75,8 +75,8 @@ buildMap = function(conn, driverTransicsID, startTime, endTime) {
   
   map <- leaflet(data = destinations) %>%
     addTiles() %>%  # Add default OpenStreetMap map tiles
-    addMarkers(lat =  ~ destination_latitude,
-               lng =  ~ destination_longitude) %>%
+    addMarkers(lat =  ~ latitude,
+               lng =  ~ longitude) %>%
     addPolylines(
       lat = ~ latitude,
       lng = ~ longitude,
@@ -140,7 +140,7 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
   #summing the fuel consumption per day
   consumption <- consumption %>%
                   group_by(start_time) %>%
-                  summarize(fuel_consumption = sum(fuel_consumption) / sum(distance)+0.01)
+                  summarize(fuel_consumption = sum(fuel_consumption) / sum(distance))
 
   #building histogram
   consumption %>% ggplot(aes(x=start_time, y=fuel_consumption)) +
@@ -218,7 +218,7 @@ buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
   #save it to file
   graph_name <-  paste0("driver_", driverTransicsID, "_activity_", endTime, ".png")
   png(graph_name)
-  tableGrob(data, cols = "", theme = tt3) %>%
+  tableGrob(data, cols = "Total Duration", theme = tt3) %>%
     grid.arrange()
   dev.off()
 }
