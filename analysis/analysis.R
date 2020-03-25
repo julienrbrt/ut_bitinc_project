@@ -66,6 +66,11 @@ buildMap = function(conn, driverTransicsID, startTime, endTime) {
     filter(driver_transics_id == driverTransicsID) %>%
     filter(start_time >= startTime && end_time <= endTime) %>%
     select(id, destination_latitude, destination_longitude) %>%
+    # join tours and activities to connect driver _ids to activities
+    inner_join(tbl(conn,"truck_activity_reports") %>% 
+               filter(start_time>= startTime && end_time <= endTime) %>%
+               select(tour_id, latitude, longitude, start_time, end_time), by = c("id" = "tour_id")) %>%
+    filter(latitude > 0 && longitude > 0) %>%
     collect()
   
   map <- leaflet(data = destinations) %>%
@@ -73,11 +78,11 @@ buildMap = function(conn, driverTransicsID, startTime, endTime) {
     addMarkers(lat =  ~ destination_latitude,
                lng =  ~ destination_longitude) %>%
     addPolylines(
-      lat = ~ destination_latitude,
-      lng = ~ destination_longitude,
+      lat = ~ latitude,
+      lng = ~ longitude,
       group = ~ id,
       color = "#003580",
-      opacity = 0.2
+      opacity = 0.15
     )
   
   graph_name <-  paste0("driver_", driverTransicsID, "_maps_", endTime, ".png")
@@ -109,7 +114,7 @@ buildIdling = function(conn, driverTransicsID, startTime, endTime) {
   idling %>% ggplot(aes(x=week_number, y=idling)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
     labs(x = "", y = "Verhouding stationair draaien tov totale rijtijd (%)") +
-    theme(axis.text.x = element_text(vjust = 0.5))
+    theme(text = element_text(size=20), axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
   graph_name <-  paste0("driver_", driverTransicsID, "_idling_", endTime, ".png")
@@ -133,14 +138,16 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
   consumption$start_time <- as.Date(consumption$start_time)
   
   #summing the fuel consumption per day
-  consumption <- consumption %>% group_by(start_time) %>% summarize(fuel_consumption = sum(distance) / sum(fuel_consumption))
+  consumption <- consumption %>%
+                  group_by(start_time) %>%
+                  summarize(fuel_consumption = sum(fuel_consumption) / sum(distance)+0.01)
 
   #building histogram
   consumption %>% ggplot(aes(x=start_time, y=fuel_consumption)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    scale_x_date(date_breaks = "2 days", date_labels = "%d %b %Y") +
-    labs(x = "", y = "Verbruik (Km / L)") +
-    theme(axis.text.x = element_text(angle = 75, vjust = 0.5))
+    scale_x_date(date_breaks = "1 day", date_labels = "%d %b") +
+    labs(x = "", y = "Verbruik (L/km)") +
+    theme(text = element_text(size=20), axis.text.x = element_text(angle = 75, vjust = 0.5))
   
   #save it to file
   graph_name <-  paste0("driver_", driverTransicsID, "_fuel_consumption_", endTime, ".png")
@@ -155,10 +162,10 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
     select(id) %>%
     inner_join(
       tbl(conn, "driver_eco_monitor_reports") %>% 
-        select(tour_id, start_time, speed_average, distance),
+        select(tour_id, start_time, fuel_consumption, speed_average, distance),
       by = c("id" = "tour_id")
     ) %>%
-    filter(distance > 0 && speed_average > 0) %>%
+    filter(distance > 0 && fuel_consumption > 0 && speed_average > 0) %>%
     collect()
   
   #convert the time to R date object (Warning, we are losing the actual time)
@@ -172,8 +179,8 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
   #building histogram
   speed %>% ggplot(aes(x=week_number, y=speed_average)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    labs(x = "", y = "Gemiddelde sneilheid") +
-    theme(axis.text.x = element_text(vjust = 0.5))
+    labs(x = "", y = "Gemiddelde snelheid") +
+    theme(text = element_text(size=20), axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
   graph_name <-  paste0("driver_", driverTransicsID, "_high_speed_", endTime, ".png")
@@ -200,6 +207,10 @@ buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
     group_by(activity) %>%
     summarize(duration = sum(as.numeric(duration)))
 
+  #filter our short activities
+  activityList <- activityList %>%
+                  filter(duration / sum(activityList$duration) * 100 >= 0.02)
+
   #build grid
   data = as.data.frame(paste(round(activityList$duration / sum(activityList$duration) * 100, digits = 2), "%",sep = ""), row.names = activityList$activity)
   tt3 <- ttheme_minimal(core=list(bg_params = list(fill = blues9[4:1], col=NA), fg_params=list(fontface=3)),colhead=list(fg_params=list(col="#003580", fontface=4L)), rowhead=list(fg_params=list(col="#003580", fontface=3L)), base_size = 28)
@@ -207,7 +218,7 @@ buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
   #save it to file
   graph_name <-  paste0("driver_", driverTransicsID, "_activity_", endTime, ".png")
   png(graph_name)
-  tableGrob(data, cols = "Total Duration", theme = tt3) %>%
+  tableGrob(data, cols = "", theme = tt3) %>%
     grid.arrange()
   dev.off()
 }

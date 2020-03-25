@@ -8,21 +8,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var reportCmd = &cobra.Command{
+var (
+	//ignoreCache will ignore the already generated graph and generate them agaub
+	ignoreCache bool
+)
+
+var genReportCmd = &cobra.Command{
 	Use:   "gen-report",
 	Short: "Generate driver reports aimed at drivers only",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var err error
-
 		log.Print("Connecting to database...")
 		//connect to database
-		err = database.InitDB()
+		err := database.InitDB()
 		if err != nil {
 			panic(err)
 		}
 		defer database.DB.Close()
 
-		err = analysis.BuildDriverReport()
+		err = analysis.BuildDriverReport(ignoreCache)
 		if err != nil {
 			return err
 		}
@@ -32,5 +35,7 @@ var reportCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(reportCmd)
+	//--ignoreCache flag
+	genReportCmd.PersistentFlags().BoolVar(&ignoreCache, "ignoreCache", false, "Do not use already generated report graphs")
+	rootCmd.AddCommand(genReportCmd)
 }

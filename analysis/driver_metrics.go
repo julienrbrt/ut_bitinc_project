@@ -17,7 +17,7 @@ type DriverMetric struct {
 func getDrivenKm(start, end time.Time) ([]DriverMetric, error) {
 	var result []DriverMetric
 	if err := database.DB.Raw(`
-	SELECT demr.driver_transics_id as transics_id, FLOOR(SUM(distance)) as metric 
+	SELECT demr.driver_transics_id as transics_id, SUM(distance) as metric 
 	FROM driver_eco_monitor_reports demr
 	INNER JOIN tours t
 	ON demr.tour_id = t.id
