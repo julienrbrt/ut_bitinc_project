@@ -31,7 +31,7 @@ GO
 
 #### Dependencies
 
-Install the required dependencies (on a Ubuntu/Debian based distribution) by running `config/install.sh` in superuser (or using sudo).
+Install the required dependencies (on a Ubuntu/Debian based distribution) by running `config/install.sh`.
 
 ### Usage
 
@@ -52,9 +52,14 @@ Options exist for this command, more information by running `tx2db import --help
 Generate the report manually
 ```tx2db gen-report```
 
+Generate a report from specific date
+```tx2db gen-report --startTime 2020-02-22```
+
+Options exist for this command, more information by running `tx2db gen-report --help`
+
 ### Architechture
 
-* ```analysis``` contains the driver analysis. Graphs are built with R and the different metrics in Go. The template of the report is written in `.html`. The report are then converted to a .png thanks to `phantomjs`.
+* ```analysis``` contains the driver analysis. Graphs are built with R and the different metrics in SQL via Go. The template of the report is written in `.html`. The reports are then converted to a `.png` thanks to `phantomjs`.
 * ```cmd``` are the commands accessible in `tx2db`
 * ```config```  are configuration files: please read [config/README.md](config/README.md).
 * ```txtango``` implements the TX-TANGO API

@@ -31,6 +31,7 @@ var genReportCmd = &cobra.Command{
 
 		//get report date
 		if startTime == "" {
+			//-8 days so we do not include the date of today
 			reportTime = time.Now().AddDate(0, 0, -8)
 		} else {
 			//parse begin and end date into time.Time
