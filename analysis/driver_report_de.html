@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Fahrstilanalyse</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html,
+        body {
+            background-color: #eee;
+            font-family: 'Roboto';
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 280px;
+            position: fixed;
+            z-index: 1;
+            /* Stay on top */
+            top: 0;
+            left: 0;
+            background-color: #004A2C;
+            /* Disable horizontal scroll */
+            overflow-x: hidden;
+            padding-top: 20px;
+            padding-right: 5px;
+            padding-left: 5px;
+            color: #FECC00;
+        }
+
+        .main {
+            /* Same as the width of the sidebar */
+            margin-left: 280px;
+            padding: 0px 10px;
+            overflow-x: hidden;
+        }
+
+        p {
+            color: white;
+            margin: 0;
+        }
+
+        h5 {
+            font-size: 18px;
+            font-weight: normal;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        .card-title {
+            color: #003580;
+            margin-top: 2px;
+            margin-bottom: 2px;
+            text-align: center;
+            font-weight: 550;
+            font-family: 'Roboto';
+        }
+
+        .med-text {
+            font-size: 4.5rem;
+        }
+
+        .text {
+            color: #003580;
+        }
+
+        .flag {
+            max-height: 40px;
+        }
+
+        .card {
+            background: #fff;
+            box-shadow: 6px 6px 6px #ddd;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .card-small {
+            padding-top: 30%;
+            padding-bottom: 30%;
+            text-align: center;
+        }
+
+        .graph {
+            max-height: 100%;
+            width: 80%;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .logo {
+            width: 70%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidenav">
+        <img class="logo" src="../logo.png">
+        <h3>{{.FullName}}</h3>
+        <p>{{.PersonID}}</p>
+        <hr style="border: 0.25rem solid #FECC00;">
+        <h5><i class="fas fa-calendar fa-md"></i> Zeitraum</h5>
+        <p>{{.StartTime}} — {{.EndTime}}</p>
+
+        <h5><i class="fas fa-truck-moving fa-md"></i> Deine Fahrzeuge</h5>
+        {{range .TruckDriven}}
+        <p>{{.}}</p>
+        {{end}}
+
+        <h5><i class="fas fa-globe-europe fa-md"></i> Besuchte Länder</h5>
+        <div class="row justify-content-md-center">
+            {{range .VisitedCountries}}
+            <div class="col col-lg-3">
+                <img class="flag" src="../flags/{{.}}.svg">
+            </div>
+            {{end}}
+        </div>
+        <h5><i class="fas fa-smile-wink fa-md"></i> Witz der Woche (NL)</h5>
+        <p>{{.PersonalJoke}}</p>
+    </div>
+
+    <div class="main">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 style="padding-bottom: 5px" class="card-title">Route der letzten Woche</h2>
+                    <img class="graph map" src="{{.TransicsID}}_maps_graph_{{.EndTime}}.png">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="col-6 col-md-6">
+                        <div class="card card-small">
+                            <h1 class="card-title med-text">{{.PanicBrakes}}</h1>
+                            <p class="text">Abrupt gebremst</p>
+                        </div>
+                        <div class="card card-small">
+                            <h1 class="card-title med-text">{{.CruiseControl}}</h1>
+                            <p class="text">Tempomat Nutzung</p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <div class="card card-small">
+                            <h1 class="card-title med-text">{{.DrivenKm}}</h1>
+                            <p class="text">Kilometer gefahren</p>
+                        </div>
+                        <div class="card card-small">
+                            <h1 class="card-title med-text">{{.FuelConsumption}}</h1>
+                            <p style="padding-bottom: 5px" class="text">Diesel verbraucht</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 class="card-title">Aktivitäten</h2>
+                    <img class="graph" src="{{.TransicsID}}_activity_graph_{{.EndTime}}.png">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 class="card-title">Verbrauch in Litern per Kilometer</h2>
+                    <img class="graph" src="{{.TransicsID}}_fuel_consumption_graph_{{.EndTime}}.png">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 class="card-title">Leerlauf</h2>
+                    <img class="graph" src="{{.TransicsID}}_idling_graph_{{.EndTime}}.png">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <h2 class="card-title">Durchschnittsgeschwindigkeit</h2>
+                    <img class="graph" src="{{.TransicsID}}_high_speed_graph_{{.EndTime}}.png">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

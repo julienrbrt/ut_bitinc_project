@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Rijstijl analyse</title>
+    <title>Analyse du style de conduite</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../css/bootstrap.min.css">
@@ -112,15 +112,15 @@
         <h3>{{.FullName}}</h3>
         <p>{{.PersonID}}</p>
         <hr style="border: 0.25rem solid #FECC00;">
-        <h5><i class="fas fa-calendar fa-md"></i> Datum</h5>
+        <h5><i class="fas fa-calendar fa-md"></i> Date</h5>
         <p>{{.StartTime}} — {{.EndTime}}</p>
 
-        <h5><i class="fas fa-truck-moving fa-md"></i> Je hebt gereden in</h5>
+        <h5><i class="fas fa-truck-moving fa-md"></i> Vous avez conduit dans</h5>
         {{range .TruckDriven}}
         <p>{{.}}</p>
         {{end}}
 
-        <h5><i class="fas fa-globe-europe fa-md"></i> Bezochte landen</h5>
+        <h5><i class="fas fa-globe-europe fa-md"></i> Pays visités</h5>
         <div class="row justify-content-md-center">
             {{range .VisitedCountries}}
             <div class="col col-lg-3">
@@ -128,7 +128,7 @@
             </div>
             {{end}}
         </div>
-        <h5><i class="fas fa-smile-wink fa-md"></i> Grap van de week</h5>
+        <h5><i class="fas fa-smile-wink fa-md"></i> Blague de la semaine (NL)</h5>
         <p>{{.PersonalJoke}}</p>
     </div>
 
@@ -136,7 +136,7 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="card">
-                    <h2 style="padding-bottom: 5px" class="card-title">Route van afgelopen week</h2>
+                    <h2 style="padding-bottom: 5px" class="card-title">Itinéraire de la semaine dernière</h2>
                     <img class="graph map" src="{{.TransicsID}}_maps_graph_{{.EndTime}}.png">
                 </div>
             </div>
@@ -146,21 +146,21 @@
                     <div class="col-6 col-md-6">
                         <div class="card card-small">
                             <h1 class="card-title med-text">{{.PanicBrakes}}</h1>
-                            <p class="text">Hard geremd</p>
+                            <p class="text">Freinage Brusque</p>
                         </div>
                         <div class="card card-small">
                             <h1 class="card-title med-text">{{.CruiseControl}}</h1>
-                            <p class="text">Cruise Control gebruik</p>
+                            <p class="text">Utilisation du régulateur de vitesse</p>
                         </div>
                     </div>
                     <div class="col-6 col-md-6">
                         <div class="card card-small">
                             <h1 class="card-title med-text">{{.DrivenKm}}</h1>
-                            <p class="text">Kilometer gereden</p>
+                            <p class="text">Kilomètres parcourus</p>
                         </div>
                         <div class="card card-small">
                             <h1 class="card-title med-text">{{.FuelConsumption}}</h1>
-                            <p style="padding-bottom: 5px" class="text">Diesel verbruikt</p>
+                            <p style="padding-bottom: 5px" class="text">Consommation Diesel</p>
                         </div>
                     </div>
                 </div>
@@ -168,7 +168,7 @@
 
             <div class="col-md-4">
                 <div class="card">
-                    <h2 class="card-title">Bezigheden</h2>
+                    <h2 class="card-title">Activités</h2>
                     <img class="graph" src="{{.TransicsID}}_activity_graph_{{.EndTime}}.png">
                 </div>
             </div>
@@ -177,21 +177,21 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="card">
-                    <h2 class="card-title">Verbruik in liters per kilometer</h2>
+                    <h2 class="card-title">Consommation en litres par kilomètre</h2>
                     <img class="graph" src="{{.TransicsID}}_fuel_consumption_graph_{{.EndTime}}.png">
                 </div>
             </div>
 
             <div class="col-md-4">
                 <div class="card">
-                    <h2 class="card-title">Minuten stationair</h2>
+                    <h2 class="card-title">Temps stationnaire</h2>
                     <img class="graph" src="{{.TransicsID}}_idling_graph_{{.EndTime}}.png">
                 </div>
             </div>
 
             <div class="col-md-4">
                 <div class="card">
-                    <h2 class="card-title">Gemiddelde snelheid</h2>
+                    <h2 class="card-title">Vitesse moyenne</h2>
                     <img class="graph" src="{{.TransicsID}}_high_speed_graph_{{.EndTime}}.png">
                 </div>
             </div>

@@ -49,7 +49,7 @@ library(grid)
 
 #parse dates
 parseDate = function(datecolumn) {
-  if (datecolumn == "0001-01-01 00:00:00.0000000 +00:00") {
+  if (datecolumn == "0001-01-01 00:00:00.0000000 +00:00" || is.na(datecolumn)) {
     return(as.character(Sys.time()))
   } else {
     yEnd = str_sub(datecolumn, 1,-16)
@@ -64,11 +64,11 @@ buildMap = function(conn, driverTransicsID, startTime, endTime) {
   #get all destinations of a given drivers
   destinations <- tbl(conn, "tours") %>%
     filter(driver_transics_id == driverTransicsID) %>%
-    filter(start_time >= startTime && end_time <= endTime) %>%
+    filter(start_time >= startTime && (end_time <= endTime || is.na(end_time))) %>%
     select(id) %>%
     # join tours and activities to connect driver _ids to activities
     inner_join(tbl(conn,"truck_activity_reports") %>% 
-               filter(start_time>= startTime && end_time <= endTime) %>%
+               filter(start_time>= startTime && (end_time <= endTime || is.na(end_time))) %>%
                select(tour_id, latitude, longitude, start_time, end_time), by = c("id" = "tour_id")) %>%
     filter(latitude > 0 && longitude > 0) %>%
     collect()
@@ -93,7 +93,7 @@ buildMap = function(conn, driverTransicsID, startTime, endTime) {
 buildIdling = function(conn, driverTransicsID, startTime, endTime) {
   idling <- tbl(conn, "tours") %>%
     filter(driver_transics_id == driverTransicsID) %>%
-    filter(start_time >= startTime && end_time <= endTime) %>%
+    filter(start_time >= startTime && (end_time <= endTime || is.na(end_time))) %>%
     select(id) %>%
     inner_join(
       tbl(conn, "driver_eco_monitor_reports") %>% 
@@ -125,7 +125,7 @@ buildIdling = function(conn, driverTransicsID, startTime, endTime) {
 buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
   consumption <- tbl(conn, "tours") %>%
     filter(driver_transics_id == driverTransicsID) %>%
-    filter(start_time >= startTime && end_time <= endTime) %>%
+    filter(start_time >= startTime && (end_time <= endTime || is.na(end_time))) %>%
     select(id) %>%
     inner_join(
       tbl(conn, "driver_eco_monitor_reports") %>% 
@@ -158,7 +158,7 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
 buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
   speed <- tbl(conn, "tours") %>%
     filter(driver_transics_id == driverTransicsID) %>%
-    filter(start_time >= startTime && end_time <= endTime) %>%
+    filter(start_time >= startTime && (end_time <= endTime || is.na(end_time))) %>%
     select(id) %>%
     inner_join(
       tbl(conn, "driver_eco_monitor_reports") %>% 
@@ -191,11 +191,11 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
 buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
   #select driver ids and tour ids from tours
   activityList = tbl(conn, "tours") %>%
-    filter(start_time>= startTime && end_time <= endTime && driver_transics_id == driverTransicsID) %>%
+    filter(start_time>= startTime && (end_time <= endTime || is.na(end_time)) && driver_transics_id == driverTransicsID) %>%
     select(tour_id = id, driver_transics_id) %>%
     # join tours and activities to connect driver _ids to activities
     inner_join(tbl(conn,"truck_activity_reports") %>% 
-               filter(start_time>= startTime && end_time <= endTime) %>%
+               filter(start_time>= startTime && (end_time <= endTime || is.na(end_time))) %>%
                select(tour_id, activity, start_time, end_time), by = "tour_id") %>%
     collect() %>%
     #format end and start time
@@ -234,7 +234,7 @@ args <- as.Date(args)
 #get list of report to generate
 getReport = function(startTime, endTime) {
   tours <- tbl(conn, "tours") %>%
-  filter(start_time >= startTime && end_time <= endTime) %>%
+  filter(start_time >= startTime && (end_time <= endTime || is.na(end_time))) %>%
   select(id, driver_transics_id) %>%
   inner_join(
     tbl(conn, "driver_eco_monitor_reports") %>% 

@@ -23,7 +23,7 @@ func getDrivenKm(start, end time.Time) ([]DriverMetric, error) {
 	ON demr.tour_id = t.id
 	WHERE distance > 0
 	AND t.start_time >= ?
-	AND t.end_time <= ?
+	AND (t.end_time <= ? OR t.end_time IS NULL)
 	GROUP BY demr.driver_transics_id
 	ORDER BY demr.driver_transics_id asc`,
 		start.Format("2006-01-02"), end.Format("2006-01-02")).Scan(&result).Error; err != nil {
@@ -48,11 +48,26 @@ func getDriverName(driversList []string) ([]DriverMetric, error) {
 	return result, nil
 }
 
-//getPersonID gets a person-id
-func getPersonID(driversList []string) ([]DriverMetric, error) {
+//getPersonID gets a driver personID
+func getDriverPersonID(driversList []string) ([]DriverMetric, error) {
 	var result []DriverMetric
 	if err := database.DB.Raw(`
 	SELECT transics_id, person_id as metric
+	FROM drivers
+	WHERE transics_id IN (?)
+	ORDER BY transics_id asc`,
+		driversList).Scan(&result).Error; err != nil {
+		return result, errors.Wrap(err, database.ErrorDB)
+	}
+
+	return result, nil
+}
+
+//getDriverLanguage gets a driver language
+func getDriverLanguage(driversList []string) ([]DriverMetric, error) {
+	var result []DriverMetric
+	if err := database.DB.Raw(`
+	SELECT transics_id, language as metric
 	FROM drivers
 	WHERE transics_id IN (?)
 	ORDER BY transics_id asc`,
@@ -72,7 +87,7 @@ func getTruckDriven(driversList []string, start, end time.Time) ([]DriverMetric,
 	INNER JOIN trucks
 	ON t.truck_transics_id = trucks.transics_id
 	WHERE t.start_time >= ?
-	AND t.end_time <= ?
+	AND (t.end_time <= ? OR t.end_time IS NULL)
 	AND t.driver_transics_id IN (?)
 	GROUP BY t.driver_transics_id, trucks.license_plate
 	ORDER BY t.driver_transics_id asc`,
@@ -92,7 +107,7 @@ func getTotalPanicBrakes(driversList []string, start, end time.Time) ([]DriverMe
 	INNER JOIN tours t
 	ON demr.tour_id = t.id
 	WHERE t.start_time >= ?
-	AND t.end_time <= ?
+	AND (t.end_time <= ? OR t.end_time IS NULL)
 	AND t.driver_transics_id IN (?)
 	GROUP BY demr.driver_transics_id
 	ORDER BY demr.driver_transics_id asc`,
@@ -114,7 +129,7 @@ func getVisitedCountries(driversList []string, start, end time.Time) ([]DriverMe
 	INNER JOIN drivers d
 	ON d.transics_id = t.driver_transics_id 
 	WHERE t.start_time >= ?
-	AND t.end_time <= ?
+	AND (t.end_time <= ? OR t.end_time IS NULL)
 	AND t.driver_transics_id IN (?)
 	GROUP BY transics_id, tar.country_code
 	ORDER BY transics_id asc`,
@@ -134,7 +149,7 @@ func getRollOutRatio(driversList []string, start, end time.Time) ([]DriverMetric
 	LEFT JOIN tours t
 	ON demr.tour_id = t.id
 	WHERE t.start_time >= ?
-	AND t.end_time <= ?
+	AND (t.end_time <= ? OR t.end_time IS NULL)
 	AND t.driver_transics_id IN (?)
 	AND distance > 0
 	GROUP BY demr.driver_transics_id
@@ -155,7 +170,7 @@ func getCruiseControlRatio(driversList []string, start, end time.Time) ([]Driver
 	LEFT JOIN tours t
 	ON demr.tour_id = t.id
 	WHERE t.start_time >= ?
-	AND t.end_time <= ?
+	AND (t.end_time <= ? OR t.end_time IS NULL)
 	AND distance > 0
 	AND t.driver_transics_id IN (?)
 	GROUP BY demr.driver_transics_id
@@ -176,7 +191,7 @@ func getFuelConsumption(driversList []string, start, end time.Time) ([]DriverMet
 	LEFT JOIN tours t
 	ON demr.tour_id = t.id
 	WHERE t.start_time >= ?
-	AND t.end_time <= ?
+	AND (t.end_time <= ? OR t.end_time IS NULL)
 	AND t.driver_transics_id IN (?)
 	GROUP BY demr.driver_transics_id
 	ORDER BY demr.driver_transics_id asc`,

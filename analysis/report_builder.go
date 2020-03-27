@@ -36,23 +36,16 @@ type DriverReportData struct {
 
 var (
 	//path of the analysis
-	reportFolderPath   = path.Join("analysis", "assets", "report")
-	reportTemplatePath = path.Join("analysis", "driver_report.html")
-	analysisPath       = path.Join("analysis", "analysis.R")
-	phantomPath        = path.Join("analysis", "html2png.js") //path of the html2png.js
-	phantomGenPath     = path.Join("analysis", "html2png_gen.js")
+	reportFolderPath     = path.Join("analysis", "assets", "report")
+	reportTemplatePathDE = path.Join("analysis", "driver_report_de.html")
+	reportTemplatePathEN = path.Join("analysis", "driver_report_en.html")
+	reportTemplatePathFR = path.Join("analysis", "driver_report_fr.html")
+	reportTemplatePathNL = path.Join("analysis", "driver_report_nl.html")
+	analysisPath         = path.Join("analysis", "analysis.R")
+	//path of the html2png.js
+	phantomPath    = path.Join("analysis", "html2png.js")
+	phantomGenPath = path.Join("analysis", "html2png_gen.js")
 )
-
-//getReportTemplate gets the template
-func getReportTemplate(wd string) (*template.Template, error) {
-	//path of template used to build the driver report
-	tmpl, err := template.ParseFiles(path.Join(wd, reportTemplatePath))
-	if err != nil {
-		return &template.Template{}, err
-	}
-
-	return tmpl, nil
-}
 
 //startAnalysis launch the R analysis
 func startAnalysis(wd, startTime, endTime string) error {
@@ -120,8 +113,6 @@ func cleanReportFiles(wd string) error {
 
 //BuildDriverReport builds a report aimed at drivers
 func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
-	log.Print("Building drivers reports...")
-
 	//get metrics
 	drivenKm, err := getDrivenKm(startTime, endTime)
 	if err != nil {
@@ -132,13 +123,21 @@ func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
 	for _, driver := range drivenKm {
 		driverList = append(driverList, driver.TransicsID)
 	}
+
+	log.Printf("Generating %d drivers reports...", len(driverList))
+
 	//get metrics
 	driverName, err := getDriverName(driverList)
 	if err != nil {
 		return err
 	}
 	//get metrics
-	personID, err := getPersonID(driverList)
+	personID, err := getDriverPersonID(driverList)
+	if err != nil {
+		return err
+	}
+	//get metrics
+	driverLanguage, err := getDriverLanguage(driverList)
 	if err != nil {
 		return err
 	}
@@ -174,45 +173,50 @@ func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
 		return err
 	}
 
+	//parse all templates
+	tmplDE, err := template.ParseFiles(path.Join(wd, reportTemplatePathDE))
+	if err != nil {
+		return err
+	}
+	tmplEN, err := template.ParseFiles(path.Join(wd, reportTemplatePathEN))
+	if err != nil {
+		return err
+	}
+	tmplFR, err := template.ParseFiles(path.Join(wd, reportTemplatePathFR))
+	if err != nil {
+		return err
+	}
+	tmplNL, err := template.ParseFiles(path.Join(wd, reportTemplatePathNL))
+	if err != nil {
+		return err
+	}
+
 	//start analysis
 	if err := startAnalysis(wd, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
 		return err
 	}
 
-	//store report template
-	tmpl, err := getReportTemplate(wd)
-	if err != nil {
-		return err
-	}
-
-	//Fill in template -- Assumes that all results are sorted
+	//fill in templates -- ASSUME THAT RESULTS ARE SORTED
 	for i, driverDrivenKm := range drivenKm {
 		var data DriverReportData
 
-		//assign metric to report data
+		//assign metrics to report data
 		kms, _ := strconv.ParseFloat(driverDrivenKm.Metric, 32)
 		data.DrivenKm = fmt.Sprintf("%.1f", kms)
 		data.TransicsID = driverDrivenKm.TransicsID
-		//used to get the right image
 		data.StartTime = startTime.Format("2006-01-02")
 		data.EndTime = endTime.Format("2006-01-02")
-
-		if driverName[i].TransicsID == data.TransicsID {
-			data.FullName = strings.ToUpper(driverName[i].Metric)
-		}
-
-		if personID[i].TransicsID == data.TransicsID {
-			data.PersonID = personID[i].Metric
-		}
+		data.FullName = strings.ToUpper(driverName[i].Metric)
+		data.PersonID = personID[i].Metric
+		data.PanicBrakes = fmt.Sprintf("%sx", panicBrakes[i].Metric)
+		data.FuelConsumption = fmt.Sprintf("%sL", fuelConsumption[i].Metric)
+		cc, _ := strconv.ParseFloat(cruiseControl[i].Metric, 32)
+		data.CruiseControl = fmt.Sprintf("%.1f%%", cc*100)
 
 		for _, truck := range truckDriven {
 			if truck.TransicsID == data.TransicsID {
 				data.TruckDriven = append(data.TruckDriven, truck.Metric)
 			}
-		}
-
-		if panicBrakes[i].TransicsID == data.TransicsID {
-			data.PanicBrakes = fmt.Sprintf("%sx", panicBrakes[i].Metric)
 		}
 
 		for _, country := range vistedCountries {
@@ -223,22 +227,23 @@ func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
 			}
 		}
 
-		if cruiseControl[i].TransicsID == data.TransicsID {
-			value, _ := strconv.ParseFloat(cruiseControl[i].Metric, 32)
-			data.CruiseControl = fmt.Sprintf("%.1f%%", value*100)
-		}
-
-		if fuelConsumption[i].TransicsID == data.TransicsID {
-			data.FuelConsumption = fmt.Sprintf("%sL", fuelConsumption[i].Metric)
-		}
-
 		//get personal joke (short only)
-		for len(data.PersonalJoke) == 0 || len(data.PersonalJoke) > 300 {
+		for len(data.PersonalJoke) == 0 || len(data.PersonalJoke) > 500 {
 			data.PersonalJoke = util.GetJoke()
 		}
 
-		//fill in template
-		report := tmpl
+		//fill in template (with right translation)
+		var report *template.Template
+		switch driverLanguage[i].Metric {
+		case "DU":
+			report = tmplDE
+		case "FR":
+			report = tmplFR
+		case "NL":
+			report = tmplNL
+		default:
+			report = tmplEN
+		}
 		buf := &bytes.Buffer{}
 		err = report.Execute(buf, data)
 
