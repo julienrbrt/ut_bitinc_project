@@ -113,7 +113,7 @@ buildIdling = function(conn, driverTransicsID, startTime, endTime) {
   #building histogram
   idling %>% ggplot(aes(x=week_number, y=idling)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    labs(x = "", y = "Verhouding stationair draaien tov totale rijtijd (%)") +
+    labs(x = "", y = "Ratio of idling compared to total driving time (%)") +
     theme(text = element_text(size=20), axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
@@ -146,7 +146,7 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
   consumption %>% ggplot(aes(x=start_time, y=fuel_consumption)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
     scale_x_date(date_breaks = "1 day", date_labels = "%d %b") +
-    labs(x = "", y = "Verbruik (L/km)") +
+    labs(x = "", y = "Consumption (L/km)") +
     theme(text = element_text(size=20), axis.text.x = element_text(angle = 75, vjust = 0.5))
   
   #save it to file
@@ -179,7 +179,7 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
   #building histogram
   speed %>% ggplot(aes(x=week_number, y=speed_average)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    labs(x = "", y = "Gemiddelde snelheid") +
+    labs(x = "", y = "Average speed") +
     theme(text = element_text(size=20), axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
