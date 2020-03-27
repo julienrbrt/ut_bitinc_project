@@ -35,11 +35,8 @@ type DriverReportData struct {
 }
 
 var (
-	//GraphPath is where are stored the R graph
-	GraphPath = path.Join("analysis", "assets", "graph")
-	//ReportPath is where are stored the reports
-	ReportPath = path.Join("analysis", "assets", "report")
 	//path of the analysis
+	reportFolderPath   = path.Join("analysis", "assets", "report")
 	reportTemplatePath = path.Join("analysis", "driver_report.html")
 	analysisPath       = path.Join("analysis", "analysis.R")
 	phantomPath        = path.Join("analysis", "html2png.js") //path of the html2png.js
@@ -57,25 +54,8 @@ func getReportTemplate(wd string) (*template.Template, error) {
 	return tmpl, nil
 }
 
-//runR launch the R analysis
-func runR(ignoreCache bool, wd, startTime, endTime string) error {
-	//only verify if cache used
-	if !ignoreCache {
-		//verify that analysis has not already been performed (i.e. no files saved with an endtime)
-		graph, err := os.Open(GraphPath)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		//get the names in only one slice
-		names, err := graph.Readdirnames(0)
-		for _, f := range names {
-			if strings.Contains(f, endTime) {
-				log.Println("Skipping analysis as graphs are already generated.")
-				return nil
-			}
-		}
-	}
+//startAnalysis launch the R analysis
+func startAnalysis(wd, startTime, endTime string) error {
 	//Run the analysis
 	r := exec.Command("Rscript", analysisPath, startTime, endTime)
 	//display error and output
@@ -89,15 +69,15 @@ func runR(ignoreCache bool, wd, startTime, endTime string) error {
 	return nil
 }
 
-//runPhamtom runs phantomjs to take a convert a html template to png
-func runPhantom(wd, reportPath string) error {
+//saveReport runs phantomjs to take a convert a html template to png
+func saveReport(wd, genReportPath string) error {
 	//fill in template
 	tmpl, err := template.ParseFiles(path.Join(wd, phantomPath))
 	if err != nil {
 		return err
 	}
 	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, reportPath)
+	err = tmpl.Execute(buf, genReportPath)
 
 	if err := ioutil.WriteFile(phantomGenPath, buf.Bytes(), 0644); err != nil {
 		log.Fatal(err)
@@ -113,13 +93,33 @@ func runPhantom(wd, reportPath string) error {
 		return errors.Wrap(err, "phantom.Run() failed")
 	}
 
-	log.Printf("Report generated in %s.png\n", reportPath)
+	log.Printf("Report successfully generated in %s.png\n", genReportPath)
+
+	return nil
+}
+
+//cleanReportFiles remove the uncessary report files required only for its generation
+func cleanReportFiles(wd string) error {
+	//clean report files
+	report, err := os.Open(reportFolderPath)
+	if err != nil {
+		return err
+	}
+
+	names, err := report.Readdirnames(0)
+	for _, f := range names {
+		if strings.Contains(f, ".html") || strings.Contains(f, "_graph_") {
+			if err := os.Remove(path.Join(wd, reportFolderPath, f)); err != nil {
+				return errors.Wrap(err, "Could not remove report files")
+			}
+		}
+	}
 
 	return nil
 }
 
 //BuildDriverReport builds a report aimed at drivers
-func BuildDriverReport(ignoreCache, skipSendMail bool, startTime, endTime time.Time) error {
+func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
 	log.Print("Building drivers reports...")
 
 	//get metrics
@@ -174,8 +174,8 @@ func BuildDriverReport(ignoreCache, skipSendMail bool, startTime, endTime time.T
 		return err
 	}
 
-	//runR analysis
-	if err := runR(ignoreCache, wd, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+	//start analysis
+	if err := startAnalysis(wd, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
 		return err
 	}
 
@@ -243,22 +243,28 @@ func BuildDriverReport(ignoreCache, skipSendMail bool, startTime, endTime time.T
 		err = report.Execute(buf, data)
 
 		//save template to disk
-		genReportPath := path.Join(wd, ReportPath, fmt.Sprintf("driver_%s_report_%s", data.PersonID, endTime.Format("2006-01-02")))
+		genReportPath := path.Join(wd, reportFolderPath, fmt.Sprintf("driver_%s_report_%s", data.PersonID, endTime.Format("2006-01-02")))
 		if err := ioutil.WriteFile(genReportPath+".html", buf.Bytes(), 0644); err != nil {
 			log.Fatal(err)
 		}
 
 		//save template to png
-		if err := runPhantom(wd, genReportPath); err != nil {
+		if err := saveReport(wd, genReportPath); err != nil {
 			log.Fatal(err)
 		}
 
 		//send analysis mail
 		if !skipSendMail {
 			if err := util.SendReportMail(genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02"), data.PersonID); err != nil {
-				log.Print("ERROR: Mail not sent.")
+				log.Fatalf("ERROR: Mail not sent: %v\n", err)
 			}
 		}
+
+	}
+
+	//clean report files
+	if err := cleanReportFiles(wd); err != nil {
+		return err
 	}
 
 	return nil

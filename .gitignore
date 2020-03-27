@@ -15,8 +15,7 @@ tx2db
 
 # R analysis
 analysis/html2png_gen.js
-analysis/assets/graph/driver_*
-analysis/assets/report/driver_*
+analysis/assets/report
 analysis/.Rproj.user
 analysis/.Rhistory
 analysis/.RData

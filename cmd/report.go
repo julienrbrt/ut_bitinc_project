@@ -11,8 +11,6 @@ import (
 )
 
 var (
-	//ignoreCache will ignore the already generated graph and generate them agaub
-	ignoreCache bool
 	//skipSendMail permits to do not send reports per mail
 	skipSendMail bool
 	//startTime define the startTime of the report
@@ -56,7 +54,7 @@ var genReportCmd = &cobra.Command{
 		}
 		defer database.DB.Close()
 
-		err = analysis.BuildDriverReport(ignoreCache, skipSendMail, reportTime, reportTime.AddDate(0, 0, reportRange))
+		err = analysis.BuildDriverReport(skipSendMail, reportTime, reportTime.AddDate(0, 0, reportRange))
 		if err != nil {
 			return err
 		}
@@ -66,8 +64,6 @@ var genReportCmd = &cobra.Command{
 }
 
 func init() {
-	//--ignoreCache flag
-	genReportCmd.PersistentFlags().BoolVar(&ignoreCache, "ignoreCache", false, "Ignore already generated graphs")
 	//--skipSendMail flag
 	genReportCmd.PersistentFlags().BoolVar(&skipSendMail, "skipSendMail", false, "Do not send a mail when generating reports")
 	//--startTime flags, define the startTime of the report
