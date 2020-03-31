@@ -21,6 +21,7 @@ import (
 //DriverReportData contains the data of a report
 type DriverReportData struct {
 	FullName         string
+	Email            string
 	PersonID         string
 	TransicsID       string
 	TruckDriven      []string
@@ -112,7 +113,7 @@ func cleanReportFiles(wd string) error {
 }
 
 //BuildDriverReport builds a report aimed at drivers
-func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
+func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime time.Time) error {
 	//get metrics
 	drivenKm, err := getDrivenKm(startTime, endTime)
 	if err != nil {
@@ -196,6 +197,8 @@ func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
 		return err
 	}
 
+	//genReportPathList contains the list of path of the generated reports
+	var genReportPathList []string
 	//fill in templates -- ASSUME THAT RESULTS ARE SORTED
 	for i, driverDrivenKm := range drivenKm {
 		var data DriverReportData
@@ -258,13 +261,22 @@ func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
 			log.Fatal(err)
 		}
 
-		//send analysis mail
-		if !skipSendMail {
-			if err := util.SendReportMail("", genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02"), data.PersonID); err != nil {
-				log.Fatalf("ERROR: Mail not sent: %v\n", err)
+		//add all report path a list
+		genReportPathList = append(genReportPathList, genReportPath+".png")
+
+		//send analysis mail to drivers
+		if !skipSendMail && !skipSendDriverMail {
+			if err := util.SendReportMail(data.Email, genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+				log.Fatalf("ERROR: Driver mail not sent: %v\n", err)
 			}
 		}
+	}
 
+	//send bulk analysis mail
+	if !skipSendMail && len(genReportPathList) > 0 {
+		if err := util.SendBulkReportMail(genReportPathList, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+			log.Fatalf("ERROR: Bulk mail not sent: %v\n", err)
+		}
 	}
 
 	//clean report files

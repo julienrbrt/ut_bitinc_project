@@ -10,8 +10,8 @@ import (
 )
 
 //SendReportMail sends a mail attaching the report to a specific email address
-func SendReportMail(recipient, attachmentPath, startTime, endTime, personID string) error {
-	//get mail credentials
+func SendReportMail(recipient, attachmentPath, startTime, endTime string) error {
+	//mail credentials
 	mailServer := os.Getenv("MAIL_SERVER")
 	mailAddress := os.Getenv("MAIL_EMAIL")
 	mailPassword := os.Getenv("MAIL_PASSWORD")
@@ -25,12 +25,38 @@ func SendReportMail(recipient, attachmentPath, startTime, endTime, personID stri
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("TX2DB Analysis <%s>", mailAddress)
 	e.To = []string{recipient}
-	e.Subject = fmt.Sprintf("[tx2db] Analysis for driver %s available", personID)
-	e.Text = []byte(fmt.Sprintf("Hello,\nA new analysis for the driver %s in the period %s to %s is available.\nHave a great day!", personID, startTime, endTime))
+	e.Subject = "[TX2DB] You have received a new analysis"
+	e.Text = []byte(fmt.Sprintf("Hello,\nYour weekly analysis for the period %s to %s is available.\nHave a great day!", startTime, endTime))
 	e.AttachFile(attachmentPath)
 
 	err := e.Send(mailServer, LoginAuth(mailAddress, mailPassword))
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//SendBulkReportMail sends a mail attaching all reports to a specific email address
+func SendBulkReportMail(attachmentPath []string, startTime, endTime string) error {
+	//mail credentials
+	mailServer := os.Getenv("MAIL_SERVER")
+	mailAddress := os.Getenv("MAIL_EMAIL")
+	mailPassword := os.Getenv("MAIL_PASSWORD")
+
+	//build mail
+	e := email.NewEmail()
+	e.From = fmt.Sprintf("TX2DB Analysis <%s>", mailAddress)
+	e.To = []string{mailAddress}
+	e.Subject = "[TX2DB] Weekly driver analysis now available"
+	e.Text = []byte(fmt.Sprintf("Hello,\nThe weekly driver analysis for the period %s to %s are available.\nHave a great day!", startTime, endTime))
+
+	//attach all reports to mail
+	for _, file := range attachmentPath {
+		e.AttachFile(file)
+	}
+
+	if err := e.Send(mailServer, LoginAuth(mailAddress, mailPassword)); err != nil {
 		return err
 	}
 
