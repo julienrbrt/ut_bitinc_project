@@ -10,16 +10,21 @@ import (
 )
 
 //SendReportMail sends a mail attaching the report to a specific email address
-func SendReportMail(attachmentPath, startTime, endTime, personID string) error {
+func SendReportMail(recipient, attachmentPath, startTime, endTime, personID string) error {
 	//get mail credentials
 	mailServer := os.Getenv("MAIL_SERVER")
 	mailAddress := os.Getenv("MAIL_EMAIL")
 	mailPassword := os.Getenv("MAIL_PASSWORD")
 
+	//set recipient to sender if no mail provided
+	if recipient == "" {
+		recipient = mailAddress
+	}
+
 	//build mail
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("TX2DB Analysis <%s>", mailAddress)
-	e.To = []string{"bit2020@bolk.nl"}
+	e.To = []string{recipient}
 	e.Subject = fmt.Sprintf("[tx2db] Analysis for driver %s available", personID)
 	e.Text = []byte(fmt.Sprintf("Hello,\nA new analysis for the driver %s in the period %s to %s is available.\nHave a great day!", personID, startTime, endTime))
 	e.AttachFile(attachmentPath)

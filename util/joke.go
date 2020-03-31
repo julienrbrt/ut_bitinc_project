@@ -4,40 +4,46 @@ package util
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
 )
 
-//More information on the Joke API here: http://api.apekool.nl/services/jokes/getjoke.html
-const jokeAPI = "http://api.apekool.nl/services/jokes/getjoke.php?type="
+//More information on http://api.apekool.nl/services/jokes/getjoke.html
+const dutchJokeAPI = "http://api.apekool.nl/services/jokes/getjoke.php?type="
 
-var jokeType = []string{"alg", "be", "nl", "xxx"}
+//More information on https://sv443.net/jokeapi/v2
+const englishJokeAPI = "https://sv443.net/jokeapi/v2/joke/Miscellaneous,Dark?blacklistFlags=religious&type=single"
 
-//GetJoke will return a random Dutch joke
-func GetJoke() string {
-	var noJoke = "Geen grapjes vandaag :("
+//apekool joke types
+var dutchJokeType = []string{"alg", "be", "nl", "xxx"}
+
+//GetJoke returns a random joke (Dutch and English)
+func GetJoke(lang string) string {
+	var noJoke string
+	var jokeAPI string
 
 	// initialize global pseudo random generator
 	rand.Seed(time.Now().Unix())
 
-	//build API url with a certain type of joke
-	resp, err := http.Get(jokeAPI + jokeType[rand.Intn(len(jokeType))])
-	if err != nil {
-		log.Fatalln(err)
-		return noJoke
+	switch lang {
+	case "NL":
+		noJoke = "Geen grapjes voor deze week :("
+		jokeAPI = dutchJokeAPI + dutchJokeType[rand.Intn(len(dutchJokeType))]
+	default:
+		noJoke = "No jokes for this week"
+		jokeAPI = englishJokeAPI
 	}
 
+	//build API url with a certain type of joke
+	resp, _ := http.Get(jokeAPI)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
 		return noJoke
 	}
 
 	var joke map[string]interface{}
 	if err := json.Unmarshal(body, &joke); err != nil {
-		log.Fatalln(err)
 		return noJoke
 	}
 

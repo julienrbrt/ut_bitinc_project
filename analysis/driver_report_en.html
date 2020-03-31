@@ -5,105 +5,10 @@
     <title>Driving style analysis</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
-    <style>
-        html,
-        body {
-            background-color: #eee;
-            font-family: 'Roboto';
-        }
-
-        .sidenav {
-            height: 100%;
-            width: 280px;
-            position: fixed;
-            z-index: 1;
-            /* Stay on top */
-            top: 0;
-            left: 0;
-            background-color: #004A2C;
-            /* Disable horizontal scroll */
-            overflow-x: hidden;
-            padding-top: 20px;
-            padding-right: 5px;
-            padding-left: 5px;
-            color: #FECC00;
-        }
-
-        .main {
-            /* Same as the width of the sidebar */
-            margin-left: 280px;
-            padding: 0px 10px;
-            overflow-x: hidden;
-        }
-
-        p {
-            color: white;
-            margin: 0;
-        }
-
-        h5 {
-            font-size: 18px;
-            font-weight: normal;
-            padding-top: 5px;
-            padding-bottom: 5px;
-        }
-
-        .card-title {
-            color: #003580;
-            margin-top: 2px;
-            margin-bottom: 2px;
-            text-align: center;
-            font-weight: 550;
-            font-family: 'Roboto';
-        }
-
-        .med-text {
-            font-size: 4.5rem;
-        }
-
-        .text {
-            color: #003580;
-        }
-
-        .flag {
-            max-height: 40px;
-        }
-
-        .card {
-            background: #fff;
-            box-shadow: 6px 6px 6px #ddd;
-            margin-top: 10px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .card-small {
-            padding-top: 30%;
-            padding-bottom: 30%;
-            text-align: center;
-        }
-
-        .graph {
-            max-height: 100%;
-            width: 80%;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .map {
-            height: 100%;
-            width: 100%;
-        }
-
-        .logo {
-            width: 70%;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 
 <body>
@@ -128,7 +33,7 @@
             </div>
             {{end}}
         </div>
-        <h5><i class="fas fa-smile-wink fa-md"></i> Joke of the week (NL)</h5>
+        <h5><i class="fas fa-smile-wink fa-md"></i> Joke of the week</h5>
         <p>{{.PersonalJoke}}</p>
     </div>
 

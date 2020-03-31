@@ -229,7 +229,7 @@ func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
 
 		//get personal joke (short only)
 		for len(data.PersonalJoke) == 0 || len(data.PersonalJoke) > 500 {
-			data.PersonalJoke = util.GetJoke()
+			data.PersonalJoke = util.GetJoke(driverLanguage[i].Metric)
 		}
 
 		//fill in template (with right translation)
@@ -260,7 +260,7 @@ func BuildDriverReport(skipSendMail bool, startTime, endTime time.Time) error {
 
 		//send analysis mail
 		if !skipSendMail {
-			if err := util.SendReportMail(genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02"), data.PersonID); err != nil {
+			if err := util.SendReportMail("", genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02"), data.PersonID); err != nil {
 				log.Fatalf("ERROR: Mail not sent: %v\n", err)
 			}
 		}

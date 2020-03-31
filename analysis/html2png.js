@@ -2,7 +2,7 @@
 var page = require('webpage').create();
 
 //viewportSize being the actual size of the headless browser
-page.viewportSize = { width: 1900, height: 900 };
+page.viewportSize = { width: 794, height: 1123 };
 
 page.open('{{.}}.html', function() {
     page.render('{{.}}.png');
