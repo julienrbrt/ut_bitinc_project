@@ -132,6 +132,7 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
         select(tour_id, fuel_consumption, start_time, distance),
       by = c("id" = "tour_id")
     ) %>%
+    filter(distance > 0) %>%
     collect()
   
   #convert the time to R date object (Warning, we are losing the actual time)
