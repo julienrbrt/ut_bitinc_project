@@ -6,7 +6,7 @@ body {
 
 .sidenav {
     height: 100%;
-    width: 280px;
+    width: 220px;
     position: fixed;
     z-index: 1;
     /* Stay on top */
@@ -23,9 +23,15 @@ body {
 
 .main {
     /* Same as the width of the sidebar */
-    margin-left: 280px;
+    margin-left: 220px;
     padding: 0px 10px;
     overflow-x: hidden;
+}
+
+@media only screen and (height: 900px) {
+    .main {
+        margin-top: 5%;
+    }
 }
 
 p {
@@ -71,7 +77,6 @@ h5 {
 }
 
 .card-small {
-    margin-top: 25%;
     padding-top: 25%;
     padding-bottom: 25%;
     text-align: center;

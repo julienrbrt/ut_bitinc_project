@@ -92,8 +92,8 @@ func saveReport(wd, genReportPath string) error {
 	return nil
 }
 
-//cleanReportFiles remove the uncessary report files required only for its generation
-func cleanReportFiles(wd string) error {
+//cleanAnalysis remove the uncessary analysis report files required only for its generation
+func cleanAnalysis(wd string) error {
 	//clean report files
 	report, err := os.Open(reportFolderPath)
 	if err != nil {
@@ -128,12 +128,7 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 	log.Printf("Generating %d drivers reports...", len(driverList))
 
 	//get metrics
-	driverName, err := getDriverName(driverList)
-	if err != nil {
-		return err
-	}
-	//get metrics
-	personID, err := getDriverPersonID(driverList)
+	driverData, err := getDriverData(driverList)
 	if err != nil {
 		return err
 	}
@@ -192,10 +187,11 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 		return err
 	}
 
-	//start analysis
+	//start (and clean) analysis
 	if err := startAnalysis(wd, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
 		return err
 	}
+	defer cleanAnalysis(wd)
 
 	//genReportPathList contains the list of path of the generated reports
 	var genReportPathList []string
@@ -207,10 +203,14 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 		kms, _ := strconv.ParseFloat(driverDrivenKm.Metric, 32)
 		data.DrivenKm = fmt.Sprintf("%.1f", kms)
 		data.TransicsID = driverDrivenKm.TransicsID
+
 		data.StartTime = startTime.Format("2006-01-02")
 		data.EndTime = endTime.Format("2006-01-02")
-		data.FullName = strings.ToUpper(driverName[i].Metric)
-		data.PersonID = personID[i].Metric
+
+		data.FullName = strings.ToUpper(driverData[i].Name)
+		data.PersonID = driverData[i].PersonID
+		data.Email = driverData[i].Email
+
 		data.PanicBrakes = fmt.Sprintf("%sx", panicBrakes[i].Metric)
 		data.FuelConsumption = fmt.Sprintf("%sL", fuelConsumption[i].Metric)
 		cc, _ := strconv.ParseFloat(cruiseControl[i].Metric, 32)
@@ -283,11 +283,6 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 		if err := util.SendBulkReportMail(pdfName, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
 			log.Fatalf("ERROR: Bulk mail not sent: %v\n", err)
 		}
-	}
-
-	//clean report files
-	if err := cleanReportFiles(wd); err != nil {
-		return err
 	}
 
 	return nil

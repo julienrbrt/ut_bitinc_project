@@ -4,6 +4,7 @@ package util
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -14,6 +15,10 @@ const dutchJokeAPI = "http://api.apekool.nl/services/jokes/getjoke.php?type="
 
 //More information on https://sv443.net/jokeapi/v2
 const englishJokeAPI = "https://sv443.net/jokeapi/v2/joke/Miscellaneous,Dark?blacklistFlags=religious&type=single"
+
+//More information on
+const frenchJokeAPI = "https://blague.xyz/api/vdm/random"
+const frenchJokeAPIToken = "_Ni2qnRfhubLAsW27nLjMsWzvJm_GO1yGsloGrim9RgcqmXilbo.wlK7vygNZ7mz"
 
 //apekool joke types
 var dutchJokeType = []string{"alg", "be", "nl", "xxx"}
@@ -29,13 +34,15 @@ func GetJoke(lang string) string {
 	switch lang {
 	case "NL":
 		noJoke = "Geen grapjes voor deze week :("
+		//build API url with a certain type of joke
 		jokeAPI = dutchJokeAPI + dutchJokeType[rand.Intn(len(dutchJokeType))]
+	case "FR":
+		return getJokeFR()
 	default:
-		noJoke = "No jokes for this week"
+		noJoke = "No jokes for this week :("
 		jokeAPI = englishJokeAPI
 	}
 
-	//build API url with a certain type of joke
 	resp, _ := http.Get(jokeAPI)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -48,4 +55,30 @@ func GetJoke(lang string) string {
 	}
 
 	return joke["joke"].(string)
+}
+
+func getJokeFR() string {
+	noJoke := "Pas de blague cette semaine :("
+
+	req, _ := http.NewRequest("GET", frenchJokeAPI, nil)
+	req.Header.Set("Authorization", frenchJokeAPIToken)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal("Error reading response. ", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return noJoke
+	}
+
+	var joke map[string]interface{}
+	if err := json.Unmarshal(body, &joke); err != nil {
+		return noJoke
+	}
+
+	return joke["vdm"].(map[string]interface{})["content"].(string)
 }

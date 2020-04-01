@@ -7,15 +7,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-//DriverMetric defines a driver metric
-type DriverMetric struct {
+//driverData defines a information about a driver
+type driverData struct {
+	Name, PersonID, Email string
+}
+
+//driverMetric defines a driver metric
+type driverMetric struct {
 	TransicsID string
 	Metric     string
 }
 
 //getDrivenKm gets the number of kilometers driven
-func getDrivenKm(start, end time.Time) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getDrivenKm(start, end time.Time) ([]driverMetric, error) {
+	var result []driverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, SUM(distance) as metric 
 	FROM driver_eco_monitor_reports demr
@@ -34,25 +39,10 @@ func getDrivenKm(start, end time.Time) ([]DriverMetric, error) {
 }
 
 //getDriverName gets a driver name
-func getDriverName(driversList []string) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getDriverData(driversList []string) ([]driverData, error) {
+	var result []driverData
 	if err := database.DB.Raw(`
-	SELECT transics_id, name as metric
-	FROM drivers
-	WHERE transics_id IN (?)
-	ORDER BY transics_id asc`,
-		driversList).Scan(&result).Error; err != nil {
-		return result, errors.Wrap(err, database.ErrorDB)
-	}
-
-	return result, nil
-}
-
-//getPersonID gets a driver personID
-func getDriverPersonID(driversList []string) ([]DriverMetric, error) {
-	var result []DriverMetric
-	if err := database.DB.Raw(`
-	SELECT transics_id, person_id as metric
+	SELECT transics_id, name, person_id, email
 	FROM drivers
 	WHERE transics_id IN (?)
 	ORDER BY transics_id asc`,
@@ -64,8 +54,8 @@ func getDriverPersonID(driversList []string) ([]DriverMetric, error) {
 }
 
 //getDriverLanguage gets a driver language
-func getDriverLanguage(driversList []string) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getDriverLanguage(driversList []string) ([]driverMetric, error) {
+	var result []driverMetric
 	if err := database.DB.Raw(`
 	SELECT transics_id, language as metric
 	FROM drivers
@@ -79,8 +69,8 @@ func getDriverLanguage(driversList []string) ([]DriverMetric, error) {
 }
 
 //getTruckDriven gets the trucks that a driver has been driving
-func getTruckDriven(driversList []string, start, end time.Time) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getTruckDriven(driversList []string, start, end time.Time) ([]driverMetric, error) {
+	var result []driverMetric
 	if err := database.DB.Raw(`
 	SELECT t.driver_transics_id as transics_id, trucks.license_plate as metric
 	FROM tours t
@@ -99,8 +89,8 @@ func getTruckDriven(driversList []string, start, end time.Time) ([]DriverMetric,
 }
 
 //getTotalPanicBrakes gets the number of panic brakes performed
-func getTotalPanicBrakes(driversList []string, start, end time.Time) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getTotalPanicBrakes(driversList []string, start, end time.Time) ([]driverMetric, error) {
+	var result []driverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, SUM(number_of_panic_brakes) as metric
 	FROM driver_eco_monitor_reports demr
@@ -119,8 +109,8 @@ func getTotalPanicBrakes(driversList []string, start, end time.Time) ([]DriverMe
 }
 
 //getVisitedCountries gets the country list where drivers have been
-func getVisitedCountries(driversList []string, start, end time.Time) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getVisitedCountries(driversList []string, start, end time.Time) ([]driverMetric, error) {
+	var result []driverMetric
 	if err := database.DB.Raw(`
 	SELECT d.transics_id as transics_id, tar.country_code as metric
 	FROM tours t
@@ -141,8 +131,8 @@ func getVisitedCountries(driversList []string, start, end time.Time) ([]DriverMe
 }
 
 //getRollOutRatio gets ratio of rolling out
-func getRollOutRatio(driversList []string, start, end time.Time) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getRollOutRatio(driversList []string, start, end time.Time) ([]driverMetric, error) {
+	var result []driverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, SUM(demr.distance_coasting) / SUM(demr.distance) as metric 
 	FROM driver_eco_monitor_reports demr
@@ -162,8 +152,8 @@ func getRollOutRatio(driversList []string, start, end time.Time) ([]DriverMetric
 }
 
 //getCruiseControlRatio gets ratio of cruise control usage
-func getCruiseControlRatio(driversList []string, start, end time.Time) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getCruiseControlRatio(driversList []string, start, end time.Time) ([]driverMetric, error) {
+	var result []driverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, SUM(demr.distance_on_cruise_control) / SUM(demr.distance) as metric 
 	FROM driver_eco_monitor_reports demr
@@ -183,8 +173,8 @@ func getCruiseControlRatio(driversList []string, start, end time.Time) ([]Driver
 }
 
 //getFuelConsumption gets the fuel consumption of a driver
-func getFuelConsumption(driversList []string, start, end time.Time) ([]DriverMetric, error) {
-	var result []DriverMetric
+func getFuelConsumption(driversList []string, start, end time.Time) ([]driverMetric, error) {
+	var result []driverMetric
 	if err := database.DB.Raw(`
 	SELECT demr.driver_transics_id as transics_id, SUM(fuel_consumption) as metric 
 	FROM driver_eco_monitor_reports demr
