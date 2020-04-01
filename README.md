@@ -57,6 +57,14 @@ Generate a report from specific date
 
 Options exist for this command, more information by running `tx2db gen-report --help`
 
+#### Emails
+
+Emails are sent by `tx2db` at different occasions:
+
+- a mail is sent to `SYSTEM_ADMINISTATOR_EMAIL` when a new driver is imported. The mail of that driver needs to be manually added into `tx2b` database under the `drivers` table.
+- a mail is sent to the drivers when a report is generated (unless `--skipSendDriverMail` is specified). The mail is sent to the address present in the `drivers` table.
+- a mail is sent to `INSTRUCTOR_EMAIL` with all the generated report in one pdf (ready to be print).
+
 ### Architechture
 
 * ```analysis``` contains the driver analysis. Graphs are built with R and the different metrics in SQL via Go. The template of the report is written in `.html`. The reports are then converted to a `.png` thanks to `phantomjs`.

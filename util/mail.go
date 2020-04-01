@@ -44,10 +44,13 @@ func SendBulkReportMail(attachmentPath string, startTime, endTime string) error 
 	mailAddress := os.Getenv("MAIL_EMAIL")
 	mailPassword := os.Getenv("MAIL_PASSWORD")
 
+	//recipient
+	instructor := os.Getenv("INSTRUCTOR_EMAIL")
+
 	//build mail
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("TX2DB Analysis <%s>", mailAddress)
-	e.To = []string{mailAddress}
+	e.To = []string{instructor}
 	e.Subject = "[TX2DB] Weekly driver analysis now available"
 	e.Text = []byte(fmt.Sprintf("Hello,\nThe weekly driver analysis for the period %s to %s are available.\nHave a great day!", startTime, endTime))
 
