@@ -38,7 +38,7 @@ func SendReportMail(recipient, attachmentPath, startTime, endTime string) error 
 }
 
 //SendBulkReportMail sends a mail attaching all reports to a specific email address
-func SendBulkReportMail(attachmentPath []string, startTime, endTime string) error {
+func SendBulkReportMail(attachmentPath string, startTime, endTime string) error {
 	//mail credentials
 	mailServer := os.Getenv("MAIL_SERVER")
 	mailAddress := os.Getenv("MAIL_EMAIL")
@@ -51,12 +51,35 @@ func SendBulkReportMail(attachmentPath []string, startTime, endTime string) erro
 	e.Subject = "[TX2DB] Weekly driver analysis now available"
 	e.Text = []byte(fmt.Sprintf("Hello,\nThe weekly driver analysis for the period %s to %s are available.\nHave a great day!", startTime, endTime))
 
-	//attach all reports to mail
-	for _, file := range attachmentPath {
-		e.AttachFile(file)
-	}
+	//attach all reports pdf to mail
+	e.AttachFile(attachmentPath)
 
 	if err := e.Send(mailServer, LoginAuth(mailAddress, mailPassword)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//SendAddMailDriver sends a mail to the system administrator
+func SendAddMailDriver(driverPersonID string) error {
+	//mail credentials
+	mailServer := os.Getenv("MAIL_SERVER")
+	mailAddress := os.Getenv("MAIL_EMAIL")
+	mailPassword := os.Getenv("MAIL_PASSWORD")
+
+	//recipient
+	administrator := os.Getenv("SYSTEM_ADMINISTATOR_EMAIL")
+
+	//build mail
+	e := email.NewEmail()
+	e.From = fmt.Sprintf("TX2DB Import <%s>", mailAddress)
+	e.To = []string{administrator}
+	e.Subject = "[TX2DB] A new driver has been added"
+	e.Text = []byte(fmt.Sprintf("Hello,\nA new driver (personID: %s) has been added in the TX2DB database. Please add it's email in the 'Driver' table so he/she can receive their weekly report.\nHave a great day!", driverPersonID))
+
+	err := e.Send(mailServer, LoginAuth(mailAddress, mailPassword))
+	if err != nil {
 		return err
 	}
 

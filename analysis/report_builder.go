@@ -272,9 +272,15 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 		}
 	}
 
+	//build all reports to pdf
+	pdfName := path.Join(wd, reportFolderPath, fmt.Sprintf("weekly_report_%s.pdf", endTime.Format("2006-01-02")))
+	if err := util.BuildPDFFromImages(pdfName, genReportPathList); err != nil {
+		return err
+	}
+
 	//send bulk analysis mail
 	if !skipSendMail && len(genReportPathList) > 0 {
-		if err := util.SendBulkReportMail(genReportPathList, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+		if err := util.SendBulkReportMail(pdfName, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
 			log.Fatalf("ERROR: Bulk mail not sent: %v\n", err)
 		}
 	}

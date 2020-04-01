@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 	"tx2db/txtango"
+	"tx2db/util"
 
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -23,8 +24,9 @@ type Driver struct {
 	DriverEcoMonitorReportID []DriverEcoMonitorReport `gorm:"foreignkey:DriverTransicsID"`
 	Tour                     []Tour                   `gorm:"foreignkey:DriverTransicsID"`
 	TransicsID               uint
-	PersonID                 string // identifier used within bolk and not by transics
+	PersonID                 string //identifier used within bolk and not by transics
 	Name                     string
+	Email                    string //email is manually filled as not present in transics
 	Language                 string
 	Inactive                 bool
 	LastModified             time.Time
@@ -80,6 +82,9 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 			// add driver
 			status = "Importing"
 			DB.Create(&newDriver)
+
+			//send mail alerting new driver created and mail to add
+			util.SendAddMailDriver(newDriver.PersonID)
 		} else if driver.LastModified.Before(newDriver.LastModified) {
 			// update driver
 			status = "Updated"
