@@ -26,7 +26,7 @@ func SendReportMail(recipient, attachmentPath, startTime, endTime string) error 
 	e.From = fmt.Sprintf("TX2DB Analysis <%s>", mailAddress)
 	e.To = []string{recipient}
 	e.Subject = "[TX2DB] You have received a new analysis"
-	e.Text = []byte(fmt.Sprintf("Hello,\nYour weekly analysis for the period %s to %s is available.\nHave a great day!", startTime, endTime))
+	e.Text = []byte(fmt.Sprintf("Hello,\nYour weekly analysis for the period %s to %s is available.\nHave a great day!\n\nThis email has been automatically generated.", startTime, endTime))
 	e.AttachFile(attachmentPath)
 
 	err := e.Send(mailServer, LoginAuth(mailAddress, mailPassword))
@@ -52,7 +52,7 @@ func SendBulkReportMail(attachmentPath string, startTime, endTime string) error 
 	e.From = fmt.Sprintf("TX2DB Analysis <%s>", mailAddress)
 	e.To = []string{instructor}
 	e.Subject = "[TX2DB] Weekly driver analysis now available"
-	e.Text = []byte(fmt.Sprintf("Hello,\nThe weekly driver analysis for the period %s to %s are available.\nHave a great day!", startTime, endTime))
+	e.Text = []byte(fmt.Sprintf("Hello,\nThe weekly driver analysis for the period %s to %s are available.\nHave a great day!\n\nThis email has been automatically generated.", startTime, endTime))
 
 	//attach all reports pdf to mail
 	e.AttachFile(attachmentPath)
@@ -79,7 +79,7 @@ func SendAddMailDriver(driverPersonID string) error {
 	e.From = fmt.Sprintf("TX2DB Import <%s>", mailAddress)
 	e.To = []string{administrator}
 	e.Subject = "[TX2DB] A new driver has been added"
-	e.Text = []byte(fmt.Sprintf("Hello,\nA new driver (personID: %s) has been added in the TX2DB database. Please add it's email in the 'Driver' table so he/she can receive their weekly report.\nHave a great day!", driverPersonID))
+	e.Text = []byte(fmt.Sprintf("Hello,\nA new driver (personID: %s) has been added in the TX2DB database. Please add it's email in the 'Driver' table so he/she can receive their weekly report.\nHave a great day!\n\nThis email has been automatically generated.", driverPersonID))
 
 	err := e.Send(mailServer, LoginAuth(mailAddress, mailPassword))
 	if err != nil {

@@ -113,7 +113,7 @@ buildIdling = function(conn, driverTransicsID, startTime, endTime) {
   #building histogram
   idling %>% ggplot(aes(x=week_number, y=idling)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    labs(x = "", y = "Ratio of idling compared to total driving time (%)") +
+    labs(x = "", y = "Ratio of idling / total driving time (%)") +
     theme(text = element_text(size=20), axis.text.x = element_text(vjust = 0.5))
   
   #save it to file
@@ -132,12 +132,12 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
         select(tour_id, fuel_consumption, start_time, distance),
       by = c("id" = "tour_id")
     ) %>%
-    filter(distance > 0) %>%
+    filter(distance > 1) %>% # to ensure removal of outliers (extremely ineficient driving for less than 1km)
     collect()
-  
+
   #convert the time to R date object (Warning, we are losing the actual time)
   consumption$start_time <- as.Date(consumption$start_time)
-  
+    
   #summing the fuel consumption per day
   consumption <- consumption %>%
                   group_by(start_time) %>%
@@ -210,8 +210,8 @@ buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
 
   #filter our short activities
   activityList <- activityList %>%
-                  filter(duration / sum(activityList$duration) * 100 >= 0.02)
-
+                  filter(duration / sum(activityList$duration) * 100 >= 0.1)
+  
   #build grid
   data = as.data.frame(paste(round(activityList$duration / sum(activityList$duration) * 100, digits = 2), "%",sep = ""), row.names = activityList$activity)
   tt3 <- ttheme_minimal(core=list(bg_params = list(fill = blues9[4:1], col=NA), fg_params=list(fontface=3)),colhead=list(fg_params=list(col="#003580", fontface=4L)), rowhead=list(fg_params=list(col="#003580", fontface=3L)), base_size = 28)
@@ -219,7 +219,7 @@ buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
   #save it to file
   graph_name <-  paste0(driverTransicsID, "_activity_graph_", endTime, ".png")
   png(graph_name)
-  tableGrob(data, cols = "Total Duration", theme = tt3) %>%
+  tableGrob(data, cols = "Duration", theme = tt3) %>%
     grid.arrange()
   dev.off()
 }
