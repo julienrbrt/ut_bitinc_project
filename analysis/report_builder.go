@@ -51,7 +51,7 @@ var (
 //startAnalysis launch the R analysis
 func startAnalysis(wd, startTime, endTime string) error {
 	//Run the analysis
-	r := exec.Command("Rscript", analysisPath, startTime, endTime)
+	r := exec.Command("Rscript", path.Join(wd, analysisPath), startTime, endTime)
 	//display error and output
 	r.Stdout = os.Stdout
 	r.Stderr = os.Stderr
@@ -95,7 +95,7 @@ func saveReport(wd, genReportPath string) error {
 //cleanAnalysis remove the uncessary analysis report files required only for its generation
 func cleanAnalysis(wd string) error {
 	//clean report files
-	report, err := os.Open(reportFolderPath)
+	report, err := os.Open(path.Join(wd, reportFolderPath))
 	if err != nil {
 		return err
 	}

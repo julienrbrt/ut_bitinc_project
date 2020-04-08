@@ -11,13 +11,13 @@ import (
 
 func main() {
 	//get program path
-	folderPath, err := osext.ExecutableFolder()
+	wd, err := osext.ExecutableFolder()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//load .env file
-	err = godotenv.Load(path.Join(folderPath, ".env"))
+	err = godotenv.Load(path.Join(wd, ".env"))
 	if err != nil {
 		log.Fatal(err)
 	}
