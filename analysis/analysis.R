@@ -142,18 +142,11 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
   consumption <- consumption %>%
                   group_by(start_time) %>%
                   summarize(fuel_consumption = sum(fuel_consumption) / sum(distance))
-
-  #if range of report greather than 14 days, display the legend for every 2 days
-  if (endTime - startTime > 14) {
-    breaks <- "2 days"
-  } else {
-    breaks <- "1 day"
-  }
-
+                  
   #building histogram
   consumption %>% ggplot(aes(x=start_time, y=fuel_consumption)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    scale_x_date(date_breaks = breaks, date_labels = "%d %b") +
+    scale_x_date(date_breaks = "1 day", date_labels = "%d %b") +
     labs(x = "", y = "Consumption (L/Km)") +
     theme(text = element_text(size=20), axis.text.x = element_text(angle = 75, vjust = 0.5))
   
