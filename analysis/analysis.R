@@ -132,7 +132,7 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
         select(tour_id, fuel_consumption, start_time, distance),
       by = c("id" = "tour_id")
     ) %>%
-    filter(distance > 1) %>% # to ensure removal of outliers (extremely ineficient driving for less than 1km)
+    filter(distance > 2) %>% # to ensure removal of outliers (extremely ineficient driving for less than 2km)
     collect()
 
   #convert the time to R date object (Warning, we are losing the actual time)
@@ -141,13 +141,20 @@ buildFuelConsumption = function(conn, driverTransicsID, startTime, endTime) {
   #summing the fuel consumption per day
   consumption <- consumption %>%
                   group_by(start_time) %>%
-                  summarize(fuel_consumption = sum(fuel_consumption) / sum(distance) * 100)
+                  summarize(fuel_consumption = sum(fuel_consumption) / sum(distance))
+
+  #if range of report greather than 14 days, display the legend for every 2 days
+  if (endTime - startTime > 14) {
+    breaks <- "2 days"
+  } else {
+    breaks <- "1 day"
+  }
 
   #building histogram
   consumption %>% ggplot(aes(x=start_time, y=fuel_consumption)) +
     geom_bar(stat="identity", fill = "#003580", alpha = 0.8) +
-    scale_x_date(date_breaks = "1 day", date_labels = "%d %b") +
-    labs(x = "", y = "Consumption (L/100km)") +
+    scale_x_date(date_breaks = breaks, date_labels = "%d %b") +
+    labs(x = "", y = "Consumption (L/Km)") +
     theme(text = element_text(size=20), axis.text.x = element_text(angle = 75, vjust = 0.5))
   
   #save it to file
@@ -166,7 +173,7 @@ buildHighSpeed = function(conn, driverTransicsID, startTime, endTime) {
         select(tour_id, start_time, fuel_consumption, speed_average, distance),
       by = c("id" = "tour_id")
     ) %>%
-    filter(distance > 0 && speed_average > 0) %>%
+    filter(distance > 2 && speed_average > 0) %>%
     collect()
   
   #convert the time to R date object (Warning, we are losing the actual time)
@@ -242,7 +249,7 @@ getReport = function(startTime, endTime) {
       select(tour_id, distance),
     by = c("id" = "tour_id")
   ) %>%
-  filter(distance > 0) %>%
+  filter(distance > 2) %>%
   distinct(driver_transics_id) %>%
   collect()
   

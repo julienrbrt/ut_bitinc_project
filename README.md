@@ -55,6 +55,9 @@ Generate the report manually
 Generate a report from specific date
 ```tx2db gen-report --startTime 2020-02-22```
 
+Generate a report of a specific range (default 7 days)
+```tx2db gen-reportweek --reportRange 30```
+
 Options exist for this command, more information by running `tx2db gen-report --help`
 
 #### Emails

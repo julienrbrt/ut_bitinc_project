@@ -32,8 +32,8 @@ var genReportCmd = &cobra.Command{
 
 		//get report date
 		if startTime == "" {
-			//get report from week back
-			reportTime = time.Now().AddDate(0, 0, -7)
+			//get report from the report range back (default a week)
+			reportTime = time.Now().AddDate(0, 0, -reportRange)
 
 			// iterate back to Monday
 			for reportTime.Weekday() != time.Monday {
@@ -55,7 +55,7 @@ var genReportCmd = &cobra.Command{
 		}
 		defer database.DB.Close()
 
-		err = analysis.BuildDriverReport(skipSendMail, skipSendDriverMail, reportTime, reportTime.AddDate(0, 0, reportRange))
+		err = analysis.BuildDriverReport(skipSendMail, skipSendDriverMail, reportTime, reportTime.AddDate(0, 0, reportRange-1))
 		if err != nil {
 			return err
 		}
@@ -72,6 +72,6 @@ func init() {
 	//--startTime flags, define the startTime of the report
 	genReportCmd.PersistentFlags().StringVar(&startTime, "startTime", "", "Define the start time of a report (default monday, a week ago)")
 	//--reportRange flag, default to 7 days
-	genReportCmd.PersistentFlags().IntVar(&reportRange, "reportRange", 6, "Define a report range")
+	genReportCmd.PersistentFlags().IntVar(&reportRange, "reportRange", 7, "Define a report range")
 	rootCmd.AddCommand(genReportCmd)
 }

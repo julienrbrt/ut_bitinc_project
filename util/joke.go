@@ -33,13 +33,13 @@ func GetJoke(lang string) string {
 
 	switch lang {
 	case "NL":
-		noJoke = "Geen grapjes voor deze week :("
+		noJoke = "Geen grap vandaag :("
 		//build API url with a certain type of joke
 		jokeAPI = dutchJokeAPI + dutchJokeType[rand.Intn(len(dutchJokeType))]
 	case "FR":
 		return getJokeFR()
 	default:
-		noJoke = "No jokes for this week :("
+		noJoke = "No jokes for today :("
 		jokeAPI = englishJokeAPI
 	}
 
@@ -58,7 +58,7 @@ func GetJoke(lang string) string {
 }
 
 func getJokeFR() string {
-	noJoke := "Pas de blague cette semaine :("
+	noJoke := "Pas de blague aujourd'hui :("
 
 	req, _ := http.NewRequest("GET", frenchJokeAPI, nil)
 	req.Header.Set("Authorization", frenchJokeAPIToken)

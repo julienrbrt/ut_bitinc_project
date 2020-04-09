@@ -26,7 +26,7 @@ func getDrivenKm(start, end time.Time) ([]driverMetric, error) {
 	FROM driver_eco_monitor_reports demr
 	INNER JOIN tours t
 	ON demr.tour_id = t.id
-	WHERE distance > 0
+	WHERE distance > 2
 	AND t.start_time >= ?
 	AND (t.end_time <= ? OR t.end_time IS NULL)
 	GROUP BY demr.driver_transics_id
@@ -141,7 +141,7 @@ func getRollOutRatio(driversList []string, start, end time.Time) ([]driverMetric
 	WHERE t.start_time >= ?
 	AND (t.end_time <= ? OR t.end_time IS NULL)
 	AND t.driver_transics_id IN (?)
-	AND distance > 0
+	AND distance > 2
 	GROUP BY demr.driver_transics_id
 	ORDER BY demr.driver_transics_id asc`,
 		start.Format("2006-01-02"), end.Format("2006-01-02"), driversList).Scan(&result).Error; err != nil {
@@ -161,7 +161,7 @@ func getCruiseControlRatio(driversList []string, start, end time.Time) ([]driver
 	ON demr.tour_id = t.id
 	WHERE t.start_time >= ?
 	AND (t.end_time <= ? OR t.end_time IS NULL)
-	AND distance > 0
+	AND distance > 2
 	AND t.driver_transics_id IN (?)
 	GROUP BY demr.driver_transics_id
 	ORDER BY demr.driver_transics_id asc`,
