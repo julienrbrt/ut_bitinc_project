@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// http://integratorsprod.transics.com/Eco/Get_EcoPerformance.html
+// http://integratorsprod.transics.com/Eco/Get_EcoMonitor_Report.html
 
 //getEcoReport implements Get_EcoMonitor_Report_V4
 //the requests filters by driver using their transics_id
