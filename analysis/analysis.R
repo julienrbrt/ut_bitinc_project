@@ -32,9 +32,6 @@ conn <- dbConnect(odbc(),
                  PWD = db_password,
                  Port = 1433)
 
-#Set working directory
-setwd("analysis/assets/report")
-
 ###############
 #####GRAPH#####
 ###############
@@ -230,7 +227,9 @@ buildActivityList = function(conn, driverTransicsID, startTime, endTime) {
 
 #get arguments
 args <- commandArgs(trailingOnly = TRUE)
-args <- as.Date(args)
+
+#Set working directory
+setwd(args[1])
 
 #get list of report to generate
 getReport = function(startTime, endTime) {
@@ -249,10 +248,10 @@ getReport = function(startTime, endTime) {
   return(tours$driver_transics_id)
 }
 
-for (driverTransicsID in getReport(args[1], args[2])){
-  buildMap(conn, driverTransicsID, args[1], args[2])
-  buildIdling(conn, driverTransicsID, args[1] - 7, args[2])
-  buildFuelConsumption(conn, driverTransicsID, args[1] - 7, args[2])
-  buildHighSpeed(conn, driverTransicsID, args[1] - 7, args[2])
-  buildActivityList(conn, driverTransicsID, args[1], args[2])
+for (driverTransicsID in getReport(args[2], args[3])){
+  buildMap(conn, driverTransicsID, args[2], args[3])
+  buildIdling(conn, driverTransicsID, as.Date(args[2]) - 7, args[3])
+  buildFuelConsumption(conn, driverTransicsID, as.Date(args[2]) - 7, args[3])
+  buildHighSpeed(conn, driverTransicsID, as.Date(args[2]) - 7, args[3])
+  buildActivityList(conn, driverTransicsID, args[2], args[3])
 }

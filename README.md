@@ -32,6 +32,7 @@ GO
 #### Dependencies
 
 Install the required dependencies (on a Ubuntu/Debian based distribution) by running `config/install.sh`.
+You need read/write access to the folder `tx2db` is installed.
 
 ### Usage
 

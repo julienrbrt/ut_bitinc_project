@@ -51,7 +51,7 @@ var (
 //startAnalysis launch the R analysis
 func startAnalysis(wd, startTime, endTime string) error {
 	//Run the analysis
-	r := exec.Command("Rscript", path.Join(wd, analysisPath), startTime, endTime)
+	r := exec.Command("Rscript", path.Join(wd, analysisPath), path.Join(wd, reportFolderPath), startTime, endTime)
 	//display error and output
 	r.Stdout = os.Stdout
 	r.Stderr = os.Stderr
@@ -73,7 +73,7 @@ func saveReport(wd, genReportPath string) error {
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, genReportPath)
 
-	if err := ioutil.WriteFile(phantomGenPath, buf.Bytes(), 0644); err != nil {
+	if err := ioutil.WriteFile(path.Join(wd, phantomGenPath), buf.Bytes(), 0644); err != nil {
 		log.Fatal(err)
 	}
 
