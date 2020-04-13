@@ -14,13 +14,14 @@ func UploadToFTP(fileName, filePath string) error {
 	ftpUser := os.Getenv("FTP_USERNAME")
 	ftpPassword := os.Getenv("FTP_PASSWORD")
 
+	//connect to ftp
 	c, err := ftp.Dial(ftpServer, ftp.DialWithTimeout(5*time.Second))
 	if err != nil {
 		return err
 	}
 
-	err = c.Login(ftpUser, ftpPassword)
-	if err != nil {
+	//login to ftp
+	if err := c.Login(ftpUser, ftpPassword); err != nil {
 		return err
 	}
 
@@ -31,11 +32,17 @@ func UploadToFTP(fileName, filePath string) error {
 	}
 	defer file.Close()
 
-	err = c.Stor(fileName, file)
-	if err != nil {
-		panic(err)
+	//change directory to "uploads"
+	if err := c.ChangeDir("uploads"); err != nil {
+		return err
 	}
 
+	//upload file to ftp
+	if err := c.Stor(fileName, file); err != nil {
+		return err
+	}
+
+	//close connection
 	if err := c.Quit(); err != nil {
 		return err
 	}
