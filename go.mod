@@ -8,6 +8,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.0.0-20200206145737-bbfc9a55622e // indirect
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/jinzhu/gorm v1.9.12
+	github.com/jlaffaye/ftp v0.0.0-20200331144919-d4caf6ffcab8
 	github.com/joho/godotenv v1.3.0
 	github.com/jordan-wright/email v0.0.0-20200322182553-8eef2508c362
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0

@@ -99,6 +99,7 @@ func cleanAnalysis(wd string) error {
 	if err != nil {
 		return err
 	}
+	defer report.Close()
 
 	names, err := report.Readdirnames(0)
 	for _, f := range names {
@@ -266,22 +267,39 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 
 		//send analysis mail to drivers
 		if !skipSendMail && !skipSendDriverMail {
-			if err := util.SendReportMail(data.Email, genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
-				log.Fatalf("ERROR: Driver mail not sent: %v\n", err)
+			//inform SYSTEM_ADMINISTATOR_EMAIL if no driver mail provided
+			if data.Email == "" {
+				if err := util.InformSystemAdministrator(data.PersonID); err != nil {
+					log.Fatalf("ERROR: System Administrator not informed of unexisting mail: %v\n", err)
+				}
+			} else {
+				if err := util.InformDriver(data.Email, genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+					log.Fatalf("ERROR: Driver mail not sent: %v\n", err)
+				}
 			}
 		}
 	}
 
-	//build all reports to pdf
-	pdfName := path.Join(wd, reportFolderPath, fmt.Sprintf("weekly_report_%s.pdf", endTime.Format("2006-01-02")))
-	if err := util.BuildPDFFromImages(pdfName, genReportPathList); err != nil {
-		return err
-	}
+	//create bulk reports
+	if len(genReportPathList) > 0 {
+		//build all reports to pdf
+		pdfName := fmt.Sprintf("weekly_report_%s.pdf", endTime.Format("2006-01-02"))
+		pdfPath := path.Join(wd, reportFolderPath, pdfName)
+		if err := util.BuildPDFFromImages(pdfPath, genReportPathList); err != nil {
+			return err
+		}
 
-	//send bulk analysis mail
-	if !skipSendMail && len(genReportPathList) > 0 {
-		if err := util.SendBulkReportMail(pdfName, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
-			log.Fatalf("ERROR: Bulk mail not sent: %v\n", err)
+		//upload pdf to ftp
+		if err := util.UploadToFTP(pdfName, pdfPath); err != nil {
+			return err
+		}
+		log.Println("Weekly report successfully uploaded to FTP")
+
+		//inform INSTRUCTOR_EMAIL that weekly analysis are available
+		if !skipSendMail {
+			if err := util.InformInstructor(startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+				log.Fatalf("ERROR: Instructor not informed of new weekly driver analysis available: %v\n", err)
+			}
 		}
 	}
 

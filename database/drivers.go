@@ -84,7 +84,7 @@ func ImportDrivers(wg *sync.WaitGroup) error {
 			DB.Create(&newDriver)
 
 			//send mail alerting new driver created and mail to add
-			util.SendAddMailDriver(newDriver.PersonID)
+			util.InformSystemAdministrator(newDriver.PersonID)
 		} else if driver.LastModified.Before(newDriver.LastModified) {
 			// update driver
 			status = "Updated"
