@@ -269,7 +269,7 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 		if !skipSendMail && !skipSendDriverMail {
 			//inform SYSTEM_ADMINISTATOR_EMAIL if no driver mail provided
 			if data.Email == "" {
-				if err := util.InformSystemAdministrator(data.PersonID); err != nil {
+				if err := util.InformSystemAdministratorDriverEmailMissing(data.PersonID); err != nil {
 					log.Fatalf("ERROR: System Administrator not informed of unexisting mail: %v\n", err)
 				}
 			} else {
@@ -291,6 +291,8 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 
 		//upload pdf to ftp
 		if err := util.UploadToFTP(pdfName, pdfPath); err != nil {
+			//inform system administator
+			util.InformSystemAdministratorFTPError(pdfPath)
 			return err
 		}
 		log.Println("Weekly report successfully uploaded to FTP")

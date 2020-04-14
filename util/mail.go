@@ -56,8 +56,8 @@ func InformInstructor(startTime, endTime string) error {
 	return nil
 }
 
-//InformSystemAdministrator sends a mail to the system administrator
-func InformSystemAdministrator(driverPersonID string) error {
+//InformSystemAdministratorDriverEmailMissing sends a mail to the system administrator
+func InformSystemAdministratorDriverEmailMissing(driverPersonID string) error {
 	//mail credentials
 	mailServer := os.Getenv("MAIL_SERVER")
 	mailAddress := os.Getenv("MAIL_EMAIL")
@@ -68,10 +68,35 @@ func InformSystemAdministrator(driverPersonID string) error {
 
 	//build mail
 	e := email.NewEmail()
-	e.From = fmt.Sprintf("TX2DB Import <%s>", mailAddress)
+	e.From = fmt.Sprintf("TX2DB Import/Analysis <%s>", mailAddress)
 	e.To = []string{administrator}
 	e.Subject = "[TX2DB] A driver mail needs to be added"
 	e.Text = []byte(fmt.Sprintf("Hello,\nThe driver (personID: %s) does not have an associated email in the TX2DB database. Please add its email in the 'Driver' table so he/she can receive their weekly report.\nHave a great day!\n\nThis email has been automatically generated.", driverPersonID))
+
+	err := e.Send(mailServer, LoginAuth(mailAddress, mailPassword))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//InformSystemAdministratorFTPError sends a mail to the system administrator
+func InformSystemAdministratorFTPError(filePath string) error {
+	//mail credentials
+	mailServer := os.Getenv("MAIL_SERVER")
+	mailAddress := os.Getenv("MAIL_EMAIL")
+	mailPassword := os.Getenv("MAIL_PASSWORD")
+
+	//recipient
+	administrator := os.Getenv("SYSTEM_ADMINISTATOR_EMAIL")
+
+	//build mail
+	e := email.NewEmail()
+	e.From = fmt.Sprintf("TX2DB Analysis <%s>", mailAddress)
+	e.To = []string{administrator}
+	e.Subject = "[TX2DB] FTP upload failed"
+	e.Text = []byte(fmt.Sprintf("Hello,\n Something wrong happen while uploading the weekly report to the FTP. Manual upload is hence necessary. The weekly report can be found in _%s_.\nHave a great day!\n\nThis email has been automatically generated.", filePath))
 
 	err := e.Send(mailServer, LoginAuth(mailAddress, mailPassword))
 	if err != nil {
