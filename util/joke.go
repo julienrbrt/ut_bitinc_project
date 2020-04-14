@@ -14,14 +14,14 @@ import (
 const dutchJokeAPI = "http://api.apekool.nl/services/jokes/getjoke.php?type="
 
 //More information on https://sv443.net/jokeapi/v2
-const englishJokeAPI = "https://sv443.net/jokeapi/v2/joke/Miscellaneous,Dark?blacklistFlags=religious&type=single"
+const englishJokeAPI = "https://sv443.net/jokeapi/v2/joke/Any?blacklistFlags=nsfw,religious,political,racist,sexist&type=single"
 
 //More information on
 const frenchJokeAPI = "https://blague.xyz/api/vdm/random"
 const frenchJokeAPIToken = "_Ni2qnRfhubLAsW27nLjMsWzvJm_GO1yGsloGrim9RgcqmXilbo.wlK7vygNZ7mz"
 
 //apekool joke types
-var dutchJokeType = []string{"alg", "be", "nl", "xxx"}
+var dutchJokeType = []string{"alg", "be", "nl"}
 
 //GetJoke returns a random joke (Dutch and English)
 func GetJoke(lang string) string {
