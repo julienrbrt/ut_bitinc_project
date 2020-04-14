@@ -21,7 +21,7 @@ The credentials of used services must be filled in the `.env` file. You can find
 
 #### MSSQL
 
-It is necessary to set a default schema in the database prior to use the program so as following:
+When newly creating a MSSQL database, it is necessary to set a default schema in the database prior to use the program so as following:
 
 ```sql
 ALTER USER [DATABASE_USER_NAME] WITH DEFAULT_SCHEMA=[dbo]
@@ -32,14 +32,13 @@ GO
 #### Dependencies
 
 Install the required dependencies (on a Ubuntu/Debian based distribution) by running `config/install.sh`.
-You need read/write access to the folder `tx2db` is installed.
+You need read/write access to the folder `tx2db` is installed. More information in [config/README.md](config/README.md)
 
 ### Usage
 
-The efficient way to import or generate report periodically data is to use **CRON** (for instance every 4h for the importer and every wednesday for the analysis).  
-This can as well be done manually using `tx2db` commands.
+An efficient way to import or generate report periodically data is to use **CRON** (for instance every 4h for the importer and every wednesday for the analysis). This can of course be done manually using directly the `tx2db` commands.
 
-An exaustive list of available commands can be found by running `tx2db --help`.
+An exaustive list of available commands can be found by running `tx2db --help`. A list of most common example will follow:
 
 #### Importer
 
@@ -57,17 +56,9 @@ Generate a report from specific date
 ```tx2db gen-report --startTime 2020-02-22```
 
 Generate a report of a specific range (default 7 days)
-```tx2db gen-reportweek --reportRange 30```
+```tx2db gen-report --reportRange 30```
 
 Options exist for this command, more information by running `tx2db gen-report --help`
-
-#### Emails
-
-Emails are sent by `tx2db` at different occasions:
-
-- a mail is sent to `SYSTEM_ADMINISTATOR_EMAIL` when a new driver is imported or when a report has to be sent to a driver without email. The mail of that driver needs to be manually added into `tx2b` database under the `drivers` table.
-- a mail is sent to the drivers when a report is generated (unless `--skipSendDriverMail` is specified). The mail is sent to the address present in the `drivers` table.
-- a mail is sent to `INSTRUCTOR_EMAIL` with all the generated report in one pdf (ready to be print). That pdf has to uploaded to the FTP server defined in the `.env`.
 
 ### Architechture
 
@@ -75,6 +66,14 @@ Emails are sent by `tx2db` at different occasions:
 * ```cmd``` are the commands accessible in `tx2db`
 * ```config```  are configuration files: please read [config/README.md](config/README.md).
 * ```txtango``` implements the TX-TANGO API
+
+### Emails
+
+Emails are sent by `tx2db` at different occasions:
+
+- a mail is sent to `SYSTEM_ADMINISTATOR_EMAIL` when a new driver is imported or when a report has to be sent to a driver without email. The mail of that driver needs to be manually added into `tx2b` database under the `drivers` table.
+- a mail is sent to the drivers when a report is generated (unless `--skipSendDriverMail` is specified). The mail is sent to the address present in the `drivers` table.
+- a mail is sent to `INSTRUCTOR_EMAIL` with all the generated report in one pdf (ready to be print). That pdf has to uploaded to the FTP server defined in the `.env`.
 
 ### More Info
 
