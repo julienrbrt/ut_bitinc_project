@@ -66,14 +66,16 @@ Options exist for this command, more information by running `tx2db gen-report --
 * ```cmd``` are the commands accessible in `tx2db`
 * ```config```  are configuration files: please read [config/README.md](config/README.md).
 * ```txtango``` implements the TX-TANGO API
+* ```utils``` implements the FTP upload, jokes, mail and PDF generation.
 
 ### Emails
 
 Emails are sent by `tx2db` at different occasions:
 
-- a mail is sent to `SYSTEM_ADMINISTATOR_EMAIL` when a new driver is imported or when a report has to be sent to a driver without email. The mail of that driver needs to be manually added into `tx2b` database under the `drivers` table.
+- a mail is sent to `SYSTEM_ADMINISTATOR_EMAIL` when a new driver is imported or when a report has to be sent to a driver without email. The mail of that driver needs to be manually added into `tx2db` database under the `drivers` table.
 - a mail is sent to the drivers when a report is generated (unless `--skipSendDriverMail` is specified). The mail is sent to the address present in the `drivers` table.
 - a mail is sent to `INSTRUCTOR_EMAIL` with all the generated report in one pdf (ready to be print). That pdf has to uploaded to the FTP server defined in the `.env`.
+- a mail is sent to `SYSTEM_ADMINISTATOR_EMAIL` if there is a failure during the upload of the weekly report to the FTP server.
 
 ### More Info
 
