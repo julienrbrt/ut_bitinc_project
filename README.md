@@ -34,6 +34,16 @@ GO
 Install the required dependencies (on a Ubuntu/Debian based distribution) by running `config/install.sh`.
 You need read/write access to the folder `tx2db` is installed. More information in [config/README.md](config/README.md)
 
+### Installation
+
+After having installed the necessary dependencies:
+
+1. ```git clone https://github.com/julienrbrt/ut_bitinc_project/```
+2. ```cd ut_bitinc_project```
+3. ```go build .```
+
+An executable `tx2db` is now available in your folder.
+
 ### Usage
 
 An efficient way to import or generate report periodically data is to use **CRON** (for instance every 4h for the importer and every wednesday for the analysis). This can of course be done manually using directly the `tx2db` commands.
