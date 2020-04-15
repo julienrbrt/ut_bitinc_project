@@ -115,6 +115,10 @@ func cleanAnalysis(wd string) error {
 
 //BuildDriverReport builds a report aimed at drivers
 func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime time.Time) error {
+	//format start and end time
+	formatedStartTime := startTime.Format("2006-01-02")
+	formatedEndTime := endTime.Format("2006-01-02")
+
 	//get metrics
 	drivenKm, err := getDrivenKm(startTime, endTime)
 	if err != nil {
@@ -126,7 +130,7 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 		driverList = append(driverList, driver.TransicsID)
 	}
 
-	log.Printf("Generating %d drivers reports...", len(driverList))
+	log.Printf("Generating %d drivers reports for the period %s to %s\n", len(driverList), formatedStartTime, formatedEndTime)
 
 	//get metrics
 	driverData, err := getDriverData(driverList)
@@ -189,7 +193,7 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 	}
 
 	//start (and clean) analysis
-	if err := startAnalysis(wd, startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+	if err := startAnalysis(wd, formatedStartTime, formatedEndTime); err != nil {
 		return err
 	}
 	defer cleanAnalysis(wd)
@@ -205,8 +209,8 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 		data.DrivenKm = fmt.Sprintf("%.1f", kms)
 		data.TransicsID = driverDrivenKm.TransicsID
 
-		data.StartTime = startTime.Format("2006-01-02")
-		data.EndTime = endTime.Format("2006-01-02")
+		data.StartTime = formatedStartTime
+		data.EndTime = formatedEndTime
 
 		data.FullName = strings.ToUpper(driverData[i].Name)
 		data.PersonID = driverData[i].PersonID
@@ -273,7 +277,7 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 					log.Fatalf("ERROR: System Administrator not informed of unexisting mail: %v\n", err)
 				}
 			} else {
-				if err := util.InformDriver(data.Email, genReportPath+".png", startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+				if err := util.InformDriver(data.Email, genReportPath+".png", formatedStartTime, formatedEndTime); err != nil {
 					log.Fatalf("ERROR: Driver mail not sent: %v\n", err)
 				}
 			}
@@ -283,7 +287,7 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 	//create bulk reports
 	if len(genReportPathList) > 0 {
 		//build all reports to pdf
-		pdfName := fmt.Sprintf("weekly_report_%s.pdf", endTime.Format("2006-01-02"))
+		pdfName := fmt.Sprintf("weekly_report_%s.pdf", formatedEndTime)
 		pdfPath := path.Join(wd, reportFolderPath, pdfName)
 		if err := util.BuildPDFFromImages(pdfPath, genReportPathList); err != nil {
 			return err
@@ -299,7 +303,7 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 
 		//inform INSTRUCTOR_EMAIL that weekly analysis are available
 		if !skipSendMail {
-			if err := util.InformInstructor(startTime.Format("2006-01-02"), endTime.Format("2006-01-02")); err != nil {
+			if err := util.InformInstructor(formatedStartTime, formatedEndTime); err != nil {
 				log.Fatalf("ERROR: Instructor not informed of new weekly driver analysis available: %v\n", err)
 			}
 		}
