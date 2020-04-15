@@ -12,8 +12,11 @@ import (
 
 var (
 	//skipSendMail permits to do not send reports per mail
-	skipSendMail       bool
+	skipSendMail bool
+	//skipSendMail permits to do not send reports to drivers
 	skipSendDriverMail bool
+	//skipUploadToFtp permits to do not send upload report to FTP
+	skipUploadToFtp bool
 	//startTime define the startTime of the report
 	startTime string
 	//reportRange defines the number of days a report contains
@@ -55,7 +58,7 @@ var genReportCmd = &cobra.Command{
 		}
 		defer database.DB.Close()
 
-		err = analysis.BuildDriverReport(skipSendMail, skipSendDriverMail, reportTime, reportTime.AddDate(0, 0, reportRange-1))
+		err = analysis.BuildDriverReport(skipSendMail, skipSendDriverMail, skipUploadToFtp, reportTime, reportTime.AddDate(0, 0, reportRange-1))
 		if err != nil {
 			return err
 		}
@@ -69,6 +72,8 @@ func init() {
 	genReportCmd.PersistentFlags().BoolVar(&skipSendMail, "skipSendMail", false, "Don't send mail alert for reports")
 	//--skipSendDriverMail flag
 	genReportCmd.PersistentFlags().BoolVar(&skipSendDriverMail, "skipSendDriverMail", false, "Don't send mail alert to drivers")
+	//--skipUploadToFtp flag
+	genReportCmd.PersistentFlags().BoolVar(&skipUploadToFtp, "skipUploadToFtp", false, "Don't upload reports to FTP")
 	//--startTime flags, define the startTime of the report
 	genReportCmd.PersistentFlags().StringVar(&startTime, "startTime", "", "Define the start time of a report (default monday, a week ago)")
 	//--reportRange flag, default to 7 days

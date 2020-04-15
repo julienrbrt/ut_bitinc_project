@@ -114,7 +114,7 @@ func cleanAnalysis(wd string) error {
 }
 
 //BuildDriverReport builds a report aimed at drivers
-func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime time.Time) error {
+func BuildDriverReport(skipSendMail, skipSendDriverMail, skipUploadToFtp bool, startTime, endTime time.Time) error {
 	//format start and end time
 	formatedStartTime := startTime.Format("2006-01-02")
 	formatedEndTime := endTime.Format("2006-01-02")
@@ -274,11 +274,11 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 			//inform SYSTEM_ADMINISTATOR_EMAIL if no driver mail provided
 			if data.Email == "" {
 				if err := util.InformSystemAdministratorDriverEmailMissing(data.PersonID); err != nil {
-					log.Fatalf("ERROR: System Administrator not informed of unexisting mail: %v\n", err)
+					log.Printf("ERROR: System Administrator not informed of unexisting mail: %v\n", err)
 				}
 			} else {
 				if err := util.InformDriver(data.Email, genReportPath+".png", formatedStartTime, formatedEndTime); err != nil {
-					log.Fatalf("ERROR: Driver mail not sent: %v\n", err)
+					log.Printf("ERROR: Driver mail not informed of available report: %v\n", err)
 				}
 			}
 		}
@@ -294,12 +294,14 @@ func BuildDriverReport(skipSendMail, skipSendDriverMail bool, startTime, endTime
 		}
 
 		//upload pdf to ftp
-		if err := util.UploadToFTP(pdfName, pdfPath); err != nil {
-			//inform system administator
-			util.InformSystemAdministratorFTPError(pdfPath)
-			return err
+		if !skipUploadToFtp {
+			if err := util.UploadToFTP(pdfName, pdfPath); err != nil {
+				//inform system administator
+				util.InformSystemAdministratorFTPError(pdfPath)
+				return err
+			}
+			log.Println("Weekly report successfully uploaded to FTP")
 		}
-		log.Println("Weekly report successfully uploaded to FTP")
 
 		//inform INSTRUCTOR_EMAIL that weekly analysis are available
 		if !skipSendMail {
